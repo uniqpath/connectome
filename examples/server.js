@@ -22,7 +22,26 @@ const protocols = {
   quantum: wsEndpointQuantum
 };
 
-const server = new Server({ port: 3500, keypair, protocols });
+const server = new Server({ port: 3500, keypair, protocols, verbose: 'extra' });
+
+server.on('prepare_channel', channel => {
+  channel.registerRemoteObject('ServerTestObject', { hello: () => 'WORLD' });
+});
+
 server.on('connection', channel => {
   console.log(colors.magenta(`Shared secret: ${colors.gray(bufferToHex(channel.sharedSecret))}`));
+
+  channel
+    .remoteObject('ClientTestObject')
+    .call('hello')
+    .then(result => {
+      console.log(`Received HELLO result from client: ${result}`);
+    })
+    .catch(console.log);
 });
+
+server.on('connection_closed', channel => {
+  console.log(colors.magenta(`Connection ${colors.gray(bufferToHex(channel.sharedSecret))} closed`));
+});
+
+server.start();
