@@ -1,4 +1,6 @@
-<img src="media/logo_connectome.png?v=2">
+## Connectome
+
+<img src="media/connectome_banner.png?v=1">
 
 This small and lean JavaScript library enables:
 
