@@ -1,6 +1,6 @@
 {
   "name": "connectome",
-  "version": "0.0.52",
+  "version": "0.0.53",
   "description": "Adventures in the simple and the complex",
   "main": "index.js",
   "type": "module",
@@ -14,11 +14,14 @@
   "author": "davidhq",
   "license": "ISC",
   "dependencies": {
+    "cambria": "^0.1.2",
     "colors": "^1.4.0",
+    "fast-json-patch": "^3.0.0-1",
     "quantum-generator": "^1.9.1",
     "tweetnacl": "^1.0.3",
     "tweetnacl-util": "^0.15.1",
-    "ws": "^7.2.3"
+    "ws": "^7.2.3",
+    "xstate": "^4.13.0"
   },
   "prettier": {
     "printWidth": 110,
