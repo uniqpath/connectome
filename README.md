@@ -1,20 +1,8 @@
 ## Connectome
 
-<img src="media/connectome_banner.png?v=1">
+<img src="media/connectome_logo.png?v=1">
 
 **AD** 🏝️
-```
-[
-  The logo is for v1.0 and (obv.) quite lame,
-  looking for redesign → please
-  write to zeta@uniqpath.com
-  if you have the skillset and are
-  interested in short & effective
-  collaboration for a good tangible reward.
-]
-```
-
-**AD** 🏝️🏝️
 
 You might want to join this [telegram channel](https://t.me/joinchat/D_snZRsPkt8ttomJrINmqA) through which we will learn about the really basic Distributed Systems Theory and through which you can monitor the progress on Connectome 2.0 which is set to be released on 1.1.2021.
 
