@@ -1,7 +1,7 @@
 {
   "name": "connectome",
-  "version": "0.0.54",
-  "description": "Adventures in the simple and the complex",
+  "version": "0.0.58",
+  "description": "Dynamic realtime connectivity and state management",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -14,12 +14,12 @@
   "author": "davidhq",
   "license": "ISC",
   "dependencies": {
-    "cambria": "^0.1.2",
     "colors": "^1.4.0",
     "fast-json-patch": "^3.0.0-1",
     "quantum-generator": "^1.9.1",
     "tweetnacl": "^1.0.3",
     "tweetnacl-util": "^0.15.1",
     "ws": "^7.2.3"
-  }
+  },
+  "devDependencies": {}
 }
