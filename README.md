@@ -1,4 +1,4 @@
-<img src="media/connectome_logo.png?v=2">
+<img src="img/connectome_logo.png?v=2">
 
 ## ⚡ Dynamic realtime state and connectivity
 
