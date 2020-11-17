@@ -4,17 +4,13 @@
 
 → for client and server-side javascript (soon WASM)
 
-## Telegram group
+## v1.0
 
-You might want to join this [telegram channel](https://t.me/joinchat/D_snZRsPkt8ttomJrINmqA) through which we will learn about the really basic Distributed Systems Theory and through which you can monitor the progress on Connectome 1.0 which is set to be released on 1.1.2021.
-
-## 10 week build-up theory course
-
-[Connectome weekly articles](https://david.zetaseek.com/blog)
+Connectome 1.0 is set to be released on 1.1.2021.
 
 ## The Purpose of this LIB
 
-This small and lean JavaScript library enables many things. Stay tuned for documentation.
+This small and lean JavaScript library enables many things.
 
 It enables many things but only *does a few things*. It does them close to perfection. Maybe even perfectly in some chosen sense that itself makes sense.
 
@@ -22,10 +18,16 @@ It only does **realtime connectivity** and **realtime state synchronization betw
 
 It works transparently between:
 
-- two node.js processes
-- between in-browser JavaScript and a node.js process
+- two node.js processes (over websockets or via IPC)
+- between in-browser JavaScript and a node.js process (over websockets)
 
 All messages and file transfers are encrypted.
+
+Websockets guarantee the correct order of message delivery and this enables realtime maximum speed state synchronization.
+
+This type of speed is great for responsive frontends with remote or local state that have to feel like native apps with lowest possible latency.
+
+One example is a drawing app. Every time you draw something on screen, the state should be able to change in the remote process and then be rendered in GUI (browser) instantly.
 
 ## How to try if you are a JS developer
 
@@ -54,13 +56,19 @@ node client.js
 
 Requires node.js with ES6 modules support, for example v13.8 and upwards.
 
+Examples ready to use in your [Svelte](https://svelte.dev) apps are coming before Dec 1st 2020.
+
 ## Production use
 
-API is not yet stable, please wait until v1.0 release.
+API is not yet totally stable but getting there! Please wait until v1.0 release.
+
+This library has seen a recent uptick in usage. Everyone can already experiment but as said, minor changes to current API can happen until v1.0.
+
+v1.0 will include a few new features besides these currently included that only need polishing.
 
 ## Documentation
 
-Soon.
+Soon. Stay tuned!
 
 ## Showcases
 
@@ -74,8 +82,8 @@ Example **web/dapp** using **Connectome Alpha** is https://zetaseek.com.
 
 It will be used for building apps in `dmt` appstore for realtime web applications.
 
-**Visit the Website for more information on this opportunity →** [dmt-system.com](https://dmt-system.com)
+**Visit DMT MEETUPS website for more information on this opportunity →** [dmt-system.com](https://dmt-system.com)
 
 <img src="https://github.com/uniqpath/info/blob/master/assets/img/dmt_research_space.jpg?raw=true">
 
-<img src="https://github.com/uniqpath/info/blob/master/assets/img/wolf_dark_moon.jpg?raw=true">
+<!-- <img src="https://github.com/uniqpath/info/blob/master/assets/img/wolf_dark_moon.jpg?raw=true"> -->
