@@ -14,22 +14,12 @@ You might want to join this [telegram channel](https://t.me/joinchat/D_snZRsPkt8
 
 ## The Purpose of this LIB
 
-This small and lean JavaScript library enables:
-
-**Encrypted dynamic connections between each two endpoints.**
-
-When v1.0 is released it will include state management (syncing and updating) over these connections.
+This small and lean JavaScript library enables many things. Stay tuned for documentation.
 
 It works transparently between:
 
 - two node.js processes
 - between in-browser JavaScript and a node.js process
-
-## Current features (alpha)
-
-- send and receive json messages
-- RPC calls on javascript objects
-- send and receive files
 
 All messages and file transfers are encrypted.
 
@@ -45,7 +35,7 @@ npm install
 ### Run a sample server and client:
 
 ```
-cd samples/simple
+cd examples/node-to-node/simple
 ```
 
 Run server in first terminal tab:
@@ -77,3 +67,12 @@ Example **web/dapp** using **Connectome Alpha** is https://zetaseek.com.
 <img src="https://github.com/uniqpath/info/blob/master/assets/img/zeta_banner.png?raw=true">
 
 <img src="https://github.com/uniqpath/info/blob/master/assets/img/wolf_dark_moon.jpg?raw=true">
+
+## Connectome heavy usage in 2021
+
+It will be used for building apps in `dmt` appstore for realtime web applications.
+
+**Visit the Website for more information on this opportunity →** [dmt-system.com](https://dmt-system.com)
+
+<img src="https://github.com/uniqpath/info/blob/master/assets/img/dmt_research_space.jpg?raw=true">
+
