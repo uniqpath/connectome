@@ -16,6 +16,10 @@ You might want to join this [telegram channel](https://t.me/joinchat/D_snZRsPkt8
 
 This small and lean JavaScript library enables many things. Stay tuned for documentation.
 
+It enables many things but only *does a few things*. It does them close to perfection. Maybe even perfectly in some chosen sense that itself makes sense.
+
+It only does **realtime connectivity** and **realtime state synchronization between two remote processes**.
+
 It works transparently between:
 
 - two node.js processes
@@ -66,8 +70,6 @@ Example **web/dapp** using **Connectome Alpha** is https://zetaseek.com.
 
 <img src="https://github.com/uniqpath/info/blob/master/assets/img/zeta_banner.png?raw=true">
 
-<img src="https://github.com/uniqpath/info/blob/master/assets/img/wolf_dark_moon.jpg?raw=true">
-
 ## Connectome heavy usage in 2021
 
 It will be used for building apps in `dmt` appstore for realtime web applications.
@@ -76,3 +78,4 @@ It will be used for building apps in `dmt` appstore for realtime web application
 
 <img src="https://github.com/uniqpath/info/blob/master/assets/img/dmt_research_space.jpg?raw=true">
 
+<img src="https://github.com/uniqpath/info/blob/master/assets/img/wolf_dark_moon.jpg?raw=true">
