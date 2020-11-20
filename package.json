@@ -2,11 +2,23 @@
   "name": "connectome",
   "version": "0.0.72",
   "description": "Dynamic realtime connectivity and state management",
-  "main": "index.js",
-  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "rollup -c",
+    "prepublishOnly": "npm run build"
   },
+  "exports": {
+    ".": {
+      "import": "./dist/client.mjs",
+      "require": "./dist/client.js"
+    },
+    "./server": {
+      "import": "./dist/server.mjs",
+      "require": "./dist/server.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/uniqpath/connectome"
@@ -14,18 +26,20 @@
   "author": "davidhq",
   "license": "ISC",
   "dependencies": {
+    "bufferutil": "^4.0.2",
     "colors": "^1.4.0",
     "fast-json-patch": "^3.0.0-1",
     "quantum-generator": "^1.9.1",
     "rfc6902": "^4.0.1",
     "tweetnacl": "^1.0.3",
     "tweetnacl-util": "^0.15.1",
+    "utf-8-validate": "^5.0.3",
     "ws": "^7.2.3"
   },
-  "prettier": {
-    "printWidth": 110,
-    "singleQuote": true,
-    "trailingComma": "none"
-  },
-  "devDependencies": {}
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^16.0.0",
+    "@rollup/plugin-node-resolve": "^10.0.0",
+    "builtin-modules": "^3.1.0",
+    "rollup": "^2.33.3"
+  }
 }
