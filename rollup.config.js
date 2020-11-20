@@ -16,6 +16,7 @@ export default [
         file: 'dist/client.js'
       }
     ],
+    // Suppress "`this` has been rewritten to `undefined`" warnings
     onwarn: (warning, defaultHandler) => {
       if (warning.code === 'THIS_IS_UNDEFINED') return;
       defaultHandler(warning);
