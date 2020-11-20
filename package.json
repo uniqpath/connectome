@@ -1,6 +1,6 @@
 {
   "name": "connectome",
-  "version": "0.0.72",
+  "version": "0.0.75",
   "description": "Dynamic realtime connectivity and state management",
   "scripts": {
     "build": "rollup -c",

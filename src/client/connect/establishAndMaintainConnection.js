@@ -7,16 +7,11 @@ const wsCLOSED = 3;
 
 import Connector from '../connector/connector.js';
 
-function establishAndMaintainConnection(
-  { address, ssl = false, port, protocol, protocolLane, keypair, remotePubkey, rpcRequestTimeout, verbose },
-  { WebSocket, log }
-) {
+function establishAndMaintainConnection({ address, ssl = false, port, protocol, lane, keypair, remotePubkey, rpcRequestTimeout, verbose }, { WebSocket, log }) {
   const wsProtocol = ssl ? 'wss' : 'ws';
-  const endpoint = port.toString().startsWith('/')
-    ? `${wsProtocol}://${address}${port}`
-    : `${wsProtocol}://${address}:${port}`;
+  const endpoint = port.toString().startsWith('/') ? `${wsProtocol}://${address}${port}` : `${wsProtocol}://${address}:${port}`;
 
-  const connector = new Connector({ address, protocol, protocolLane, rpcRequestTimeout, keypair, verbose });
+  const connector = new Connector({ address, protocol, lane, rpcRequestTimeout, keypair, verbose });
 
   if (connector.connection) {
     return connector;
@@ -54,13 +49,9 @@ function checkConnection({ connector, endpoint, protocol }, { WebSocket, log }) 
 
   if (connectionIdle(conn) || connector.decommissioned) {
     if (connectionIdle(conn)) {
-      log(
-        `Connection ${connector.connection.endpoint} became idle, closing websocket ${conn.websocket.rand}`
-      );
+      log(`Connection ${connector.connection.endpoint} became idle, closing websocket ${conn.websocket.rand}`);
     } else {
-      log(
-        `Connection ${connector.connection.endpoint} decommisioned, closing websocket ${conn.websocket.rand}, will not retry again `
-      );
+      log(`Connection ${connector.connection.endpoint} decommisioned, closing websocket ${conn.websocket.rand}, will not retry again `);
     }
 
     conn.terminate();
@@ -107,10 +98,10 @@ function tryReconnect({ connector, endpoint, protocol }, { WebSocket, log }) {
   }
 
   if (!browser) {
-    ws.on('error', (error) => {});
+    ws.on('error', error => {});
   }
 
-  const openCallback = (m) => {
+  const openCallback = m => {
     conn.currentlyTryingWS = null;
     conn.checkTicker = 0;
     addSocketListeners({ ws, connector, openCallback }, { log });
@@ -132,17 +123,16 @@ function tryReconnect({ connector, endpoint, protocol }, { WebSocket, log }) {
 function addSocketListeners({ ws, connector, openCallback }, { log }) {
   const conn = connector.connection;
 
-  const errorCallback = (m) => {
+  const errorCallback = m => {
     log(`websocket ${ws.rand} conn ${connector.connection.endpoint} error`);
     log(m);
   };
 
-  const closeCallback = (m) => {
-    log(`websocket ${ws.rand} conn ${connector.connection.endpoint} closed`);
+  const closeCallback = m => {
     connector.connectStatus(false);
   };
 
-  const messageCallback = (_msg) => {
+  const messageCallback = _msg => {
     conn.checkTicker = 0;
 
     const msg = browser ? _msg.data : _msg;

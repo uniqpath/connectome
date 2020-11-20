@@ -54,7 +54,7 @@ class ConnectorPool {
       return {
         address,
         protocol: conn.protocol,
-        protocolLane: conn.protocolLane,
+        lane: conn.lane,
         remotePubkeyHex: conn.remotePubkeyHex(),
         ready: conn.isReady(), // 💡 connected and agreed on shared key ... used to determine if we can already send via connector or "we wait for the next rouund"
         //💡 informative-nature only, not used for distributed system logic
@@ -64,7 +64,7 @@ class ConnectorPool {
       };
     });
 
-    const order = compareValues('protocol', 'protocolLane');
+    const order = compareValues('protocol', 'lane');
     return list.sort(order);
   }
 }

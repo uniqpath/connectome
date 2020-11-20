@@ -1,1 +1,1 @@
-export { default as connectionsAcceptor } from './connectionsAcceptor';
+export { default as ConnectionsAcceptor } from './connectionsAcceptor';

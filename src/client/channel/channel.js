@@ -25,8 +25,8 @@ class Channel extends EventEmitter {
     this.receivedCount = 0;
   }
 
-  setProtocolLane(protocolLane) {
-    this.protocolLane = protocolLane;
+  setLane(lane) {
+    this.lane = lane;
   }
 
   setSharedSecret(sharedSecret) {
@@ -35,9 +35,7 @@ class Channel extends EventEmitter {
 
   isReady({ warn = true } = {}) {
     if (warn) {
-      console.log(
-        "LIB USAGE WARNING ⚠️  we normally don't have to check if channel is ready because we already get it prepared"
-      );
+      console.log("LIB USAGE WARNING ⚠️  we normally don't have to check if channel is ready because we already get it prepared");
       console.log('If you really need to do this, call isReady like this: isReady({ warn: false })');
     }
     return !!this.sharedSecret;
@@ -87,12 +85,6 @@ class Channel extends EventEmitter {
         return this.reverseRpcClient.remoteObject(handle).call(methodName, listify(params));
       }
     };
-  }
-
-  streamFile({ filePath, sessionId }) {
-    throw new Error('Cannot stream file from browser, use this only from node.js process!');
-
-    //import('../fileTransport/feedBytesIntoChannel/streamFile').then(streamFileModule => streamFileModule.default({ filePath, sessionId, channel: this }));
   }
 
   terminate() {
