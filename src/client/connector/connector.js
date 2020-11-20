@@ -13,18 +13,11 @@ import RPCTarget from '../rpc/RPCTarget.js';
 import newKeypair from '../keypair/newKeypair.js';
 
 class Connector extends EventEmitter {
-  constructor({
-    address,
-    protocol,
-    protocolLane,
-    keypair = newKeypair(),
-    rpcRequestTimeout,
-    verbose = false
-  } = {}) {
+  constructor({ address, protocol, lane, keypair = newKeypair(), rpcRequestTimeout, verbose = false } = {}) {
     super();
 
     this.protocol = protocol;
-    this.protocolLane = protocolLane;
+    this.lane = lane;
 
     const { privateKey: clientPrivateKey, publicKey: clientPublicKey } = keypair;
 
@@ -76,22 +69,16 @@ class Connector extends EventEmitter {
 
       const num = this.successfulConnectsCount;
 
-      this.diffieHellman({
-        clientPrivateKey: this.clientPrivateKey,
-        clientPublicKey: this.clientPublicKey,
-        protocolLane: this.protocolLane
-      })
+      this.diffieHellman({ clientPrivateKey: this.clientPrivateKey, clientPublicKey: this.clientPublicKey, lane: this.lane })
         .then(({ sharedSecret, sharedSecretHex }) => {
           this.ready = true;
           this.connectedAt = Date.now();
 
           this.emit('ready', { sharedSecret, sharedSecretHex });
 
-          console.log(
-            `✓ Ready: DMT Protocol Connector [ ${this.address} · ${this.protocol}/${this.protocolLane} ]`
-          );
+          console.log(`✓ Ready: DMT Protocol Connector [ ${this.address} · ${this.protocol}/${this.lane} ]`);
         })
-        .catch((e) => {
+        .catch(e => {
           if (num == this.successfulConnectsCount) {
             console.log(e);
             console.log('dropping connection and retrying again');
@@ -125,11 +112,11 @@ class Connector extends EventEmitter {
     new RPCTarget({ serversideChannel: this, serverMethods: obj, methodPrefix: handle });
   }
 
-  diffieHellman({ clientPrivateKey, clientPublicKey, protocolLane }) {
+  diffieHellman({ clientPrivateKey, clientPublicKey, lane }) {
     return new Promise((success, reject) => {
       this.remoteObject('Auth')
         .call('exchangePubkeys', { pubkey: this.clientPublicKeyHex })
-        .then((remotePubkeyHex) => {
+        .then(remotePubkeyHex => {
           const sharedSecret = nacl.box.before(hexToBuffer(remotePubkeyHex), clientPrivateKey);
           const sharedSecretHex = bufferToHex(sharedSecret);
           this.sharedSecret = sharedSecret;
@@ -144,7 +131,7 @@ class Connector extends EventEmitter {
           }
 
           this.remoteObject('Auth')
-            .call('finalizeHandshake', { protocolLane })
+            .call('finalizeHandshake', { lane })
             .then(() => {})
             .catch(reject);
         })
