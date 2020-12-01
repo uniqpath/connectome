@@ -9,11 +9,11 @@ export default [
     output: [
       {
         format: 'esm',
-        file: 'dist/client.mjs'
+        file: 'dist/index.mjs'
       },
       {
         format: 'cjs',
-        file: 'dist/client.js'
+        file: 'dist/index.js'
       }
     ],
     // Suppress "`this` has been rewritten to `undefined`" warnings
@@ -29,11 +29,11 @@ export default [
     output: [
       {
         format: 'esm',
-        file: 'dist/server.mjs'
+        file: 'server/index.mjs'
       },
       {
         format: 'cjs',
-        file: 'dist/server.js'
+        file: 'server/index.js'
       }
     ]
   }
