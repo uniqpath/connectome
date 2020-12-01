@@ -3,3 +3,4 @@ deploy
 deploy_readme
 
 dist
+/server

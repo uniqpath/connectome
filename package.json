@@ -2,22 +2,27 @@
   "name": "connectome",
   "version": "0.0.75",
   "description": "Dynamic realtime connectivity and state management",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "typings": "typings/src/client/index.d.ts",
   "scripts": {
-    "build": "rollup -c",
+    "build": "rollup -c && node scripts/build-artifacts",
     "prepublishOnly": "npm run build"
   },
   "exports": {
     ".": {
-      "import": "./dist/client.mjs",
-      "require": "./dist/client.js"
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
     },
     "./server": {
-      "import": "./dist/server.mjs",
-      "require": "./dist/server.js"
+      "import": "./server/index.mjs",
+      "require": "./server/index.js"
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "server",
+    "typings"
   ],
   "repository": {
     "type": "git",
