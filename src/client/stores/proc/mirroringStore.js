@@ -1,4 +1,4 @@
-import { EventEmitter } from '../../utils/index.js';
+import { EventEmitter } from '../../../utils/index.js';
 
 import { clone } from './util/index.js';
 
@@ -13,12 +13,12 @@ class MirroringStore extends EventEmitter {
   }
 
   mirror(channelList) {
-    channelList.on('new_channel', channel => {
+    channelList.on('new_channel', (channel) => {
       const { state } = this;
       channel.send({ state });
     });
 
-    this.on('diff', diff => {
+    this.on('diff', (diff) => {
       channelList.sendToAll({ diff });
     });
   }

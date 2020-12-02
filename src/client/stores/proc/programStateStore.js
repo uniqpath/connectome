@@ -1,4 +1,4 @@
-import { EventEmitter } from '../../utils/index.js';
+import { EventEmitter } from '../../../utils/index.js';
 
 import { clone } from './util/index.js';
 
@@ -7,7 +7,15 @@ import KeyValueStore from './twoLevelMergeKVStore.js';
 import getDiff from './lib/getDiff.js';
 
 class ProgramStateStore extends EventEmitter {
-  constructor(initialState = {}, { loadState = null, saveState = null, omitStateFn = x => x, removeStateChangeFalseTriggers = x => x } = {}) {
+  constructor(
+    initialState = {},
+    {
+      loadState = null,
+      saveState = null,
+      omitStateFn = (x) => x,
+      removeStateChangeFalseTriggers = (x) => x
+    } = {}
+  ) {
     super();
 
     this.omitStateFn = omitStateFn;
@@ -33,12 +41,12 @@ class ProgramStateStore extends EventEmitter {
   }
 
   mirror(channelList) {
-    channelList.on('new_channel', channel => {
+    channelList.on('new_channel', (channel) => {
       const state = this.omitStateFn(clone(this.state()));
       channel.send({ state });
     });
 
-    this.on('diff', diff => {
+    this.on('diff', (diff) => {
       channelList.sendToAll({ diff });
     });
   }
@@ -80,7 +88,8 @@ class ProgramStateStore extends EventEmitter {
 
   save(state) {
     if (this.saveState) {
-      this.lastSavedState = this.saveState({ state: clone(state), lastSavedState: this.lastSavedState }) || this.lastSavedState;
+      this.lastSavedState =
+        this.saveState({ state: clone(state), lastSavedState: this.lastSavedState }) || this.lastSavedState;
     }
   }
 
@@ -116,12 +125,12 @@ class ProgramStateStore extends EventEmitter {
     this.subscriptions.push(handler);
     handler(this.state());
     return () => {
-      this.subscriptions = this.subscriptions.filter(sub => sub !== handler);
+      this.subscriptions = this.subscriptions.filter((sub) => sub !== handler);
     };
   }
 
   pushStateToSubscribers() {
-    this.subscriptions.forEach(handler => handler(this.state()));
+    this.subscriptions.forEach((handler) => handler(this.state()));
   }
 }
 
