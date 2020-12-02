@@ -1,4 +1,4 @@
-import Emitter from '../../../utils/emitter/index.js';
+import Emitter from '../../utils/emitter/index.js';
 
 // 💡 Extending Emitter - used rarely or not at all...
 // 💡 we do use it inside ConnectedStore so that it can emit 'ready' event
@@ -36,12 +36,12 @@ class SimpleStore extends Emitter {
     this.subscriptions.push(handler);
     handler(this.state);
     return () => {
-      this.subscriptions = this.subscriptions.filter((sub) => sub !== handler);
+      this.subscriptions = this.subscriptions.filter(sub => sub !== handler);
     };
   }
 
   pushStateToSubscribers() {
-    this.subscriptions.forEach((handler) => handler(this.state));
+    this.subscriptions.forEach(handler => handler(this.state));
   }
 }
 

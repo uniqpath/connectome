@@ -1,4 +1,4 @@
-import { EventEmitter } from '../../../utils/index.js';
+import { EventEmitter } from '../../utils/index.js';
 
 import { clone } from './util/index.js';
 
@@ -6,16 +6,8 @@ import KeyValueStore from './twoLevelMergeKVStore.js';
 
 import getDiff from './lib/getDiff.js';
 
-class CanonicStore extends EventEmitter {
-  constructor(
-    initialState = {},
-    {
-      loadState = null,
-      saveState = null,
-      omitStateFn = (x) => x,
-      removeStateChangeFalseTriggers = (x) => x
-    } = {}
-  ) {
+class ProgramStateStore extends EventEmitter {
+  constructor(initialState = {}, { loadState = null, saveState = null, omitStateFn = x => x, removeStateChangeFalseTriggers = x => x } = {}) {
     super();
 
     this.omitStateFn = omitStateFn;
@@ -36,6 +28,19 @@ class CanonicStore extends EventEmitter {
     this.kvStore.update(initialState, { announce: false });
 
     this.stateChangesCount = 0;
+
+    this.subscriptions = [];
+  }
+
+  mirror(channelList) {
+    channelList.on('new_channel', channel => {
+      const state = this.omitStateFn(clone(this.state()));
+      channel.send({ state });
+    });
+
+    this.on('diff', diff => {
+      channelList.sendToAll({ diff });
+    });
   }
 
   update(patch, { announce = true } = {}) {
@@ -75,8 +80,7 @@ class CanonicStore extends EventEmitter {
 
   save(state) {
     if (this.saveState) {
-      this.lastSavedState =
-        this.saveState({ state: clone(state), lastSavedState: this.lastSavedState }) || this.lastSavedState;
+      this.lastSavedState = this.saveState({ state: clone(state), lastSavedState: this.lastSavedState }) || this.lastSavedState;
     }
   }
 
@@ -93,10 +97,7 @@ class CanonicStore extends EventEmitter {
 
     const prunedState = this.removeStateChangeFalseTriggers(this.omitStateFn(clone(state)));
 
-    const diff = getDiff({
-      state: prunedState,
-      prevAnnouncedState: this.prevAnnouncedState
-    });
+    const diff = getDiff(this.prevAnnouncedState, prunedState);
 
     if (diff) {
       this.save(state);
@@ -106,8 +107,22 @@ class CanonicStore extends EventEmitter {
       this.stateChangesCount += 1;
 
       this.prevAnnouncedState = prunedState;
+
+      this.pushStateToSubscribers();
     }
+  }
+
+  subscribe(handler) {
+    this.subscriptions.push(handler);
+    handler(this.state());
+    return () => {
+      this.subscriptions = this.subscriptions.filter(sub => sub !== handler);
+    };
+  }
+
+  pushStateToSubscribers() {
+    this.subscriptions.forEach(handler => handler(this.state()));
   }
 }
 
-export default CanonicStore;
+export default ProgramStateStore;
