@@ -1,4 +1,4 @@
-import Emitter from '../../../../utils/emitter/index.js';
+import Emitter from '../../../utils/emitter/index.js';
 
 class SwitchDevice extends Emitter {
   constructor({ mcs, connectDevice, foreground }) {
@@ -24,9 +24,7 @@ class SwitchDevice extends Emitter {
 
       this.connectDevice.connectOtherDevice({ address, deviceKey });
     } else {
-      const matchingDevice = this.mcs.nearbyDevices.find(
-        (device) => device.deviceKey == deviceKey && !device.thisDevice
-      );
+      const matchingDevice = this.mcs.nearbyDevices.find(device => device.deviceKey == deviceKey && !device.thisDevice);
 
       matchingDevice.address = matchingDevice.ip;
 
@@ -35,7 +33,7 @@ class SwitchDevice extends Emitter {
       } else {
         this.emit('connect_to_device_key_failed');
 
-        const thisDevice = this.mcs.nearbyDevices.find((device) => device.thisDevice);
+        const thisDevice = this.mcs.nearbyDevices.find(device => device.thisDevice);
         this.switchState(thisDevice);
       }
     }
