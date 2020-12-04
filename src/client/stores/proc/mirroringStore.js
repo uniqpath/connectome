@@ -13,26 +13,25 @@ class MirroringStore extends EventEmitter {
   }
 
   mirror(channelList) {
-    channelList.on('new_channel', (channel) => {
+    channelList.on('new_channel', channel => {
       const { state } = this;
       channel.send({ state });
     });
 
-    this.on('diff', (diff) => {
+    this.on('diff', diff => {
       channelList.sendToAll({ diff });
     });
   }
 
-  set(patch, { announce = true } = {}) {
-    Object.assign(this.state, patch);
-    this.announceStateChange(announce);
+  set(state, { announce = true } = {}) {
+    this.state = state;
+
+    if (announce) {
+      this.announceStateChange();
+    }
   }
 
-  announceStateChange(announce = true) {
-    if (!announce) {
-      return;
-    }
-
+  announceStateChange() {
     const { state } = this;
 
     const diff = getDiff(this.prevAnnouncedState, state);
