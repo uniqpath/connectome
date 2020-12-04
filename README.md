@@ -1,8 +1,8 @@
-<img src="img/connectome_logo.png?v=2">
+<img src="img/connectome_logo.png" width="70%" style="float: left;">
 
-## ⚡ Dynamic realtime state and connectivity
+## Dynamic realtime state and connectivity
 
-→ for client and server-side javascript (soon WASM)
+✨ For **frontend** and **backend** (all three combinations: _F→B_, _B→B_, possibly _F→F_ as well). **JS** for now, soon **WASM**.
 
 ## v1.0
 
@@ -10,53 +10,20 @@ Connectome 1.0 is set to be released on 1.1.2021.
 
 ## The Purpose of this LIB
 
-This small and lean JavaScript library enables many things.
-
-It enables many things but only *does a few things*. It does them close to perfection. Maybe even perfectly in some chosen sense that itself makes sense.
-
-It only does **realtime connectivity** and **realtime state synchronization between two remote processes**.
+This small and lean JavaScript library does **realtime connectivity** and **realtime state synchronization** between two remote processes.
 
 It works transparently between:
 
 - two node.js processes (over websockets or via IPC)
 - between in-browser JavaScript and a node.js process (over websockets)
 
-All messages and file transfers are encrypted.
+🔐 All messages and file transfers are encrypted.
 
-Websockets guarantee the correct order of message delivery and this enables realtime maximum speed state synchronization.
+⚡ Websockets guarantee the correct order of message delivery and this enables realtime maximum speed state synchronization.
 
-This type of speed is great for responsive frontends with remote or local state that have to feel like native apps with lowest possible latency.
+🕹️ This type of speed is great for responsive frontends with remote or local state that have to feel like native apps with lowest possible latency.
 
-One example is a drawing app. Every time you draw something on screen, the state should be able to change in the remote process and then be rendered in GUI (browser) instantly.
-
-## How to try if you are a JS developer
-
-Get the library on your computer:
-```
-git clone https://github.com/uniqpath/connectome.git
-cd connectome
-npm install
-```
-
-### Run a sample server and client:
-
-```
-cd examples/node-to-node/simple
-```
-
-Run server in first terminal tab:
-```
-node server.js
-```
-
-Run client in another terminal tab:
-```
-node client.js
-```
-
-Requires node.js with ES6 modules support, for example v13.8 and upwards.
-
-Examples ready to use in your [Svelte](https://svelte.dev) apps are coming before Dec 1st 2020.
+🎨 One example is a drawing app. Every time you draw something on screen, the state should be able to change in the remote process and then be rendered in GUI (browser) instantly.
 
 ## Production use
 
@@ -72,18 +39,5 @@ Soon. Stay tuned!
 
 ## Showcases
 
-Example **web/dapp** using **Connectome Alpha** is https://zetaseek.com.
+See [here](./help/SHOWCASES.md).
 
-**ZetaSeek** is a Modular Decentralized Search Engine in Development.
-
-<img src="https://github.com/uniqpath/info/blob/master/assets/img/zeta_banner.png?raw=true">
-
-## Connectome heavy usage in 2021
-
-It will be used for building apps in `dmt` appstore for realtime web applications.
-
-**Visit DMT MEETUPS website for more information on this opportunity →** [dmt-system.com](https://dmt-system.com)
-
-<img src="https://github.com/uniqpath/info/blob/master/assets/img/dmt_research_space.jpg?raw=true">
-
-<!-- <img src="https://github.com/uniqpath/info/blob/master/assets/img/wolf_dark_moon.jpg?raw=true"> -->
