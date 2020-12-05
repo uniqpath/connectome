@@ -2,7 +2,6 @@ import fastJsonPatch from 'fast-json-patch';
 
 import connect from '../../connect/connectBrowser.js';
 import ConnectedStoreBase from './connectedStoreBase.js';
-import BasicStore from './basicStore.js';
 
 import newKeypair from '../../keypair/newKeypair.js';
 
@@ -35,8 +34,6 @@ class ConnectedStore extends ConnectedStoreBase {
 
     this.rpcRequestTimeout = rpcRequestTimeout;
 
-    //this.connected = new BasicStore(undefined);
-
     this.connect(address, port, keypair);
   }
 
@@ -68,7 +65,7 @@ class ConnectedStore extends ConnectedStoreBase {
     });
 
     this.connector.on('ready', ({ sharedSecret, sharedSecretHex }) => {
-      this.setMerge({ connected: true });
+      this.setConnected(true);
 
       this.emit('ready');
     });
@@ -78,12 +75,12 @@ class ConnectedStore extends ConnectedStoreBase {
     // 💡 connected == true => while connected
     setTimeout(() => {
       if (this.state.connected == undefined) {
-        this.setMerge({ connected: false });
+        this.setConnected(false);
       }
     }, 300);
 
     this.connector.on('disconnect', () => {
-      this.setMerge({ connected: false });
+      this.setConnected(false);
     });
 
     // 💡 Special incoming JSON message: { state: ... } ... parsed as part of 'Connectome State Syncing Protocol'
@@ -100,9 +97,6 @@ class ConnectedStore extends ConnectedStoreBase {
 
     // 💡 Special incoming JSON message: { diff: ... } ... parsed as part of 'Connectome State Syncing Protocol'
     this.connector.on('receive_diff', diff => {
-      // console.log("Diff:");
-      // console.log(diff);
-
       if (this.wireStateReceived) {
         applyJSONPatch(this.state, diff);
         this.pushStateToSubscribers();

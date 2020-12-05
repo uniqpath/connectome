@@ -1,7 +1,6 @@
 import Emitter from '../../../utils/emitter/index.js';
 
-// 💡 Extending Emitter - used rarely or not at all...
-// 💡 we do use it inside ConnectedStore so that it can emit 'ready' event
+// 💡 we use Emitter inside ConnectedStore to emit 'ready' event
 class ConnectedStoreBase extends Emitter {
   constructor(initialState = {}) {
     super();
@@ -12,22 +11,15 @@ class ConnectedStoreBase extends Emitter {
   }
 
   set(state) {
-    this.setMerge(state);
-    // this.state = state;
-    // Object.assign(this, state);
-    // // Object.assign(this.state, state);
-    // this.pushStateToSubscribers();
-  }
+    const { connected } = this.state;
+    this.state = { ...state, connected };
 
-  setMerge(patch) {
-    //this.state = state;
-    //Object.assign(this, patch);
-    Object.assign(this.state, patch);
     this.pushStateToSubscribers();
   }
 
-  get() {
-    return this.state;
+  setConnected(connected) {
+    Object.assign(this.state, { connected });
+    this.pushStateToSubscribers();
   }
 
   clearState({ except = [] } = {}) {
