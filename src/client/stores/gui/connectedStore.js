@@ -1,14 +1,25 @@
 import fastJsonPatch from 'fast-json-patch';
 
 import connect from '../../connect/connectBrowser.js';
-import SimpleStore from './simpleStore.js';
+import ConnectedStoreBase from './connectedStoreBase.js';
+import BasicStore from './basicStore.js';
 
 import newKeypair from '../../keypair/newKeypair.js';
 
 const { applyPatch: applyJSONPatch } = fastJsonPatch;
 
-class ConnectedStore extends SimpleStore {
-  constructor({ address, ssl = false, port, protocol, lane, keypair = newKeypair(), logStore, rpcRequestTimeout, verbose } = {}) {
+class ConnectedStore extends ConnectedStoreBase {
+  constructor({
+    address,
+    ssl = false,
+    port,
+    protocol,
+    lane,
+    keypair = newKeypair(),
+    logStore,
+    rpcRequestTimeout,
+    verbose
+  } = {}) {
     super();
 
     if (!address) {
@@ -23,6 +34,8 @@ class ConnectedStore extends SimpleStore {
     this.verbose = verbose;
 
     this.rpcRequestTimeout = rpcRequestTimeout;
+
+    //this.connected = new BasicStore(undefined);
 
     this.connect(address, port, keypair);
   }
@@ -55,7 +68,7 @@ class ConnectedStore extends SimpleStore {
     });
 
     this.connector.on('ready', ({ sharedSecret, sharedSecretHex }) => {
-      this.set({ connected: true });
+      this.setMerge({ connected: true });
 
       this.emit('ready');
     });
@@ -64,13 +77,13 @@ class ConnectedStore extends SimpleStore {
     // 💡 connected == false => while disconnected
     // 💡 connected == true => while connected
     setTimeout(() => {
-      if (this.connected == undefined) {
-        this.set({ connected: false });
+      if (this.state.connected == undefined) {
+        this.setMerge({ connected: false });
       }
     }, 300);
 
     this.connector.on('disconnect', () => {
-      this.set({ connected: false });
+      this.setMerge({ connected: false });
     });
 
     // 💡 Special incoming JSON message: { state: ... } ... parsed as part of 'Connectome State Syncing Protocol'
@@ -87,6 +100,9 @@ class ConnectedStore extends SimpleStore {
 
     // 💡 Special incoming JSON message: { diff: ... } ... parsed as part of 'Connectome State Syncing Protocol'
     this.connector.on('receive_diff', diff => {
+      // console.log("Diff:");
+      // console.log(diff);
+
       if (this.wireStateReceived) {
         applyJSONPatch(this.state, diff);
         this.pushStateToSubscribers();

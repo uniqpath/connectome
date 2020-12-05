@@ -2,7 +2,7 @@ import Emitter from '../../../utils/emitter/index.js';
 
 // 💡 Extending Emitter - used rarely or not at all...
 // 💡 we do use it inside ConnectedStore so that it can emit 'ready' event
-class SimpleStore extends Emitter {
+class ConnectedStoreBase extends Emitter {
   constructor(initialState = {}) {
     super();
 
@@ -12,10 +12,17 @@ class SimpleStore extends Emitter {
   }
 
   set(state) {
-    Object.assign(this.state, state);
+    this.setMerge(state);
+    // this.state = state;
+    // Object.assign(this, state);
+    // // Object.assign(this.state, state);
+    // this.pushStateToSubscribers();
+  }
 
-    Object.assign(this, this.state);
-
+  setMerge(patch) {
+    //this.state = state;
+    //Object.assign(this, patch);
+    Object.assign(this.state, patch);
     this.pushStateToSubscribers();
   }
 
@@ -23,7 +30,9 @@ class SimpleStore extends Emitter {
     return this.state;
   }
 
-  clearState({ except }) {
+  clearState({ except = [] } = {}) {
+    //except.push('connected');
+
     for (const key of Object.keys(this.state)) {
       if (!except.includes(key)) {
         delete this[key];
@@ -36,13 +45,13 @@ class SimpleStore extends Emitter {
     this.subscriptions.push(handler);
     handler(this.state);
     return () => {
-      this.subscriptions = this.subscriptions.filter((sub) => sub !== handler);
+      this.subscriptions = this.subscriptions.filter(sub => sub !== handler);
     };
   }
 
   pushStateToSubscribers() {
-    this.subscriptions.forEach((handler) => handler(this.state));
+    this.subscriptions.forEach(handler => handler(this.state));
   }
 }
 
-export default SimpleStore;
+export default ConnectedStoreBase;

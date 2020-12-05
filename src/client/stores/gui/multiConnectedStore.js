@@ -1,4 +1,4 @@
-import SimpleStore from './simpleStore.js';
+import ConnectedStoreBase from './connectedStoreBase.js';
 
 import ConnectDevice from './multiConnectedStoreModules/connectDevice.js';
 import Foreground from './multiConnectedStoreModules/foreground.js';
@@ -6,8 +6,18 @@ import SwitchDevice from './multiConnectedStoreModules/switchDevice.js';
 
 import newKeypair from '../../keypair/newKeypair.js';
 
-class MultiConnectedStore extends SimpleStore {
-  constructor({ address, port, protocol, lane, keypair = newKeypair(), connectToDeviceKey, logStore, rpcRequestTimeout, verbose }) {
+class MultiConnectedStore extends ConnectedStoreBase {
+  constructor({
+    address,
+    port,
+    protocol,
+    lane,
+    keypair = newKeypair(),
+    connectToDeviceKey,
+    logStore,
+    rpcRequestTimeout,
+    verbose
+  }) {
     super();
 
     if (!address) {
@@ -44,7 +54,9 @@ class MultiConnectedStore extends SimpleStore {
     if (this.activeStore()) {
       this.activeStore().action({ action, namespace, payload });
     } else {
-      console.log(`Error emitting remote action ${action} / ${namespace}. Debug info: activeDeviceKey=${this.activeDeviceKey}`);
+      console.log(
+        `Error emitting remote action ${action} / ${namespace}. Debug info: activeDeviceKey=${this.activeDeviceKey}`
+      );
     }
   }
 
@@ -57,7 +69,9 @@ class MultiConnectedStore extends SimpleStore {
       return this.activeStore().remoteObject(objectName);
     }
 
-    console.log(`Error obtaining remote object ${objectName}. Debug info: activeDeviceKey=${this.activeDeviceKey}`);
+    console.log(
+      `Error obtaining remote object ${objectName}. Debug info: activeDeviceKey=${this.activeDeviceKey}`
+    );
   }
 
   switch({ address, deviceKey, deviceName }) {

@@ -1,6 +1,6 @@
-import SimpleStore from './simpleStore.js';
+import BasicStore from './basicStore.js';
 
-class LogStore extends SimpleStore {
+class LogStore extends BasicStore {
   constructor() {
     super();
 
