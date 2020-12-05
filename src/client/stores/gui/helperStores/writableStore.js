@@ -1,15 +1,19 @@
-class WritableStore {
+import Emitter from '../../../../utils/emitter/index.js';
+
+// 💡 we use Emitter inside ConnectedStore to emit 'ready' event
+// 💡 and inside MultiConnectedStore to also emit a few events
+
+class WritableStore extends Emitter {
   constructor(initialState) {
+    super();
+
     this.state = initialState;
 
     this.subscriptions = [];
   }
 
   set(state) {
-    //this.clearState();
-
     this.state = state;
-    //Object.assign(this, state); // PROBLEMS HERE !!! this.clearState();
 
     this.pushStateToSubscribers();
   }
@@ -20,7 +24,9 @@ class WritableStore {
 
   subscribe(handler) {
     this.subscriptions.push(handler);
+
     handler(this.state);
+
     return () => {
       this.subscriptions = this.subscriptions.filter(sub => sub !== handler);
     };

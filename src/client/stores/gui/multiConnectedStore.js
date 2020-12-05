@@ -1,12 +1,12 @@
-import ConnectedStoreBase from './connectedStoreBase.js';
+import MergeStore from './helperStores/mergeStore.js';
 
-import ConnectDevice from './multiConnectedStoreModules/connectDevice.js';
-import Foreground from './multiConnectedStoreModules/foreground.js';
-import SwitchDevice from './multiConnectedStoreModules/switchDevice.js';
+import ConnectDevice from './mcsHelpers/connectDevice.js';
+import Foreground from './mcsHelpers/foreground.js';
+import SwitchDevice from './mcsHelpers/switchDevice.js';
 
 import newKeypair from '../../keypair/newKeypair.js';
 
-class MultiConnectedStore extends ConnectedStoreBase {
+class MultiConnectedStore extends MergeStore {
   constructor({
     address,
     port,
@@ -55,7 +55,7 @@ class MultiConnectedStore extends ConnectedStoreBase {
       this.activeStore().action({ action, namespace, payload });
     } else {
       console.log(
-        `Error emitting remote action ${action} / ${namespace}. Debug info: activeDeviceKey=${this.activeDeviceKey}`
+        `Error emitting remote action ${action} / ${namespace}. Debug info: activeDeviceKey=${this.activeDeviceKey()}`
       );
     }
   }
@@ -70,7 +70,7 @@ class MultiConnectedStore extends ConnectedStoreBase {
     }
 
     console.log(
-      `Error obtaining remote object ${objectName}. Debug info: activeDeviceKey=${this.activeDeviceKey}`
+      `Error obtaining remote object ${objectName}. Debug info: activeDeviceKey=${this.activeDeviceKey()}`
     );
   }
 
@@ -79,9 +79,13 @@ class MultiConnectedStore extends ConnectedStoreBase {
   }
 
   activeStore() {
-    if (this.activeDeviceKey) {
-      return this.stores[this.activeDeviceKey];
+    if (this.activeDeviceKey()) {
+      return this.stores[this.activeDeviceKey()];
     }
+  }
+
+  activeDeviceKey() {
+    return this.get().activeDeviceKey;
   }
 }
 

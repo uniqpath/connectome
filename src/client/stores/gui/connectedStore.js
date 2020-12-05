@@ -1,7 +1,7 @@
 import fastJsonPatch from 'fast-json-patch';
 
 import connect from '../../connect/connectBrowser.js';
-import ConnectedStoreBase from './connectedStoreBase.js';
+import ConnectedStoreBase from './helperStores/connectedStoreBase.js';
 
 import newKeypair from '../../keypair/newKeypair.js';
 
@@ -66,7 +66,6 @@ class ConnectedStore extends ConnectedStoreBase {
 
     this.connector.on('ready', ({ sharedSecret, sharedSecretHex }) => {
       this.setConnected(true);
-
       this.emit('ready');
     });
 
@@ -92,7 +91,7 @@ class ConnectedStore extends ConnectedStoreBase {
         console.log(state);
       }
 
-      this.set(state);
+      this.set(state); // will not loose / omit { connected } because ConnectedStoreBase includes this field in 'ignore'
     });
 
     // 💡 Special incoming JSON message: { diff: ... } ... parsed as part of 'Connectome State Syncing Protocol'
