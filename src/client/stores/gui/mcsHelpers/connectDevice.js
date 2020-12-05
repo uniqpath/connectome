@@ -8,7 +8,16 @@ class ConnectDevice {
   }
 
   createStore({ address }) {
-    const { port, protocol, lane, logStore, rpcRequestTimeout, verbose, privateKey: clientPrivateKey, publicKey: clientPublicKey } = this.mcs;
+    const {
+      port,
+      protocol,
+      lane,
+      logStore,
+      rpcRequestTimeout,
+      verbose,
+      privateKey: clientPrivateKey,
+      publicKey: clientPublicKey
+    } = this.mcs;
 
     return new ConnectedStore({
       address,
@@ -50,7 +59,7 @@ class ConnectDevice {
 
         const needToConnectAnotherDevice = this.connectToDeviceKey && this.connectToDeviceKey != deviceKey;
 
-        if (this.mcs.activeDeviceKey == deviceKey && !needToConnectAnotherDevice) {
+        if (this.mcs.activeDeviceKey() == deviceKey && !needToConnectAnotherDevice) {
           const optimisticDeviceName = state.device.deviceName;
           this.foreground.set(state, { optimisticDeviceName });
         }
@@ -77,7 +86,7 @@ class ConnectDevice {
     this.mcs.stores[deviceKey] = newStore;
 
     newStore.subscribe(state => {
-      if (this.mcs.activeDeviceKey == deviceKey) {
+      if (this.mcs.activeDeviceKey() == deviceKey) {
         const optimisticDeviceName = state.device ? state.device.deviceName : null;
         this.foreground.set(state, { optimisticDeviceName });
       }
