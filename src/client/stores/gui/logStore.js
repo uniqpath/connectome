@@ -1,10 +1,10 @@
-import BasicStore from './basicStore.js';
+import WritableStore from './writableStore.js';
 
-class LogStore extends BasicStore {
+class LogStore extends WritableStore {
   constructor() {
-    super();
+    super({ log: [] });
 
-    this.set({ log: [] });
+    // this.set();
   }
 
   addToLog({ origConsoleLog, limit }, ...args) {

@@ -1,5 +1,5 @@
-class BasicStore {
-  constructor(initialState = {}) {
+class WritableStore {
+  constructor(initialState) {
     this.state = initialState;
 
     this.subscriptions = [];
@@ -31,4 +31,4 @@ class BasicStore {
   }
 }
 
-export default BasicStore;
+export default WritableStore;
