@@ -8,3 +8,21 @@ fs.writeFileSync(
     '\t'
   )
 );
+
+fs.writeFileSync(
+  'stores/package.json',
+  JSON.stringify(
+    { main: 'index.js', module: 'index.mjs', typings: '../typings/src/stores/index.d.ts' },
+    undefined,
+    '\t'
+  )
+);
+
+fs.writeFileSync(
+  'crypto/package.json',
+  JSON.stringify(
+    { main: 'index.js', module: 'index.mjs', typings: '../typings/src/crypto/index.d.ts' },
+    undefined,
+    '\t'
+  )
+);
