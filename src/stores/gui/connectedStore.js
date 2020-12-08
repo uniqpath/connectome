@@ -1,9 +1,9 @@
 import fastJsonPatch from 'fast-json-patch';
 
-import connect from '../../connect/connectBrowser.js';
+import connect from '../../client/connect/connectBrowser.js';
 import ConnectedStoreBase from './helperStores/connectedStoreBase.js';
 
-import newKeypair from '../../keypair/newKeypair.js';
+import newKeypair from '../../crypto/keypair/newKeypair.js';
 
 const { applyPatch: applyJSONPatch } = fastJsonPatch;
 
