@@ -17,11 +17,21 @@
     "./server": {
       "import": "./server/index.mjs",
       "require": "./server/index.js"
+    },
+    "./stores": {
+      "import": "./stores/index.mjs",
+      "require": "./stores/index.js"
+    },
+    "./crypto": {
+      "import": "./crypto/index.mjs",
+      "require": "./crypto/index.js"
     }
   },
   "files": [
     "dist",
     "server",
+    "stores",
+    "crypto",
     "typings"
   ],
   "repository": {

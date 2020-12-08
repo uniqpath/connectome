@@ -36,5 +36,35 @@ export default [
         file: 'server/index.js'
       }
     ]
+  },
+  {
+    input: 'src/stores/index.js',
+    external: builtinModules,
+    plugins: [nodeResolve({ preferBuiltins: true }), commonjs()],
+    output: [
+      {
+        format: 'esm',
+        file: 'stores/index.mjs'
+      },
+      {
+        format: 'cjs',
+        file: 'stores/index.js'
+      }
+    ]
+  },
+  {
+    input: 'src/crypto/index.js',
+    external: builtinModules,
+    plugins: [nodeResolve({ preferBuiltins: true }), commonjs()],
+    output: [
+      {
+        format: 'esm',
+        file: 'crypto/index.mjs'
+      },
+      {
+        format: 'cjs',
+        file: 'crypto/index.js'
+      }
+    ]
   }
 ];
