@@ -4,7 +4,7 @@ import ConnectDevice from './mcsHelpers/connectDevice.js';
 import Foreground from './mcsHelpers/foreground.js';
 import SwitchDevice from './mcsHelpers/switchDevice.js';
 
-import newKeypair from '../../keypair/newKeypair.js';
+import newKeypair from '../../crypto/keypair/newKeypair.js';
 
 class MultiConnectedStore extends MergeStore {
   constructor({

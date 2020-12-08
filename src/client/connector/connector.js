@@ -10,7 +10,7 @@ import { EventEmitter, listify, hexToBuffer, bufferToHex } from '../../utils/ind
 import RpcClient from '../rpc/client.js';
 import RPCTarget from '../rpc/RPCTarget.js';
 
-import newKeypair from '../keypair/newKeypair.js';
+import newKeypair from '../../crypto/keypair/newKeypair.js';
 
 class Connector extends EventEmitter {
   constructor({ address, protocol, lane, keypair = newKeypair(), rpcRequestTimeout, verbose = false } = {}) {
