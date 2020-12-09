@@ -39,8 +39,7 @@ export default [
   },
   {
     input: 'src/stores/index.js',
-    external: builtinModules,
-    plugins: [nodeResolve({ preferBuiltins: true }), commonjs()],
+    plugins: [nodeResolve({ preferBuiltins: false, browser: true }), commonjs()],
     output: [
       {
         format: 'esm',
@@ -54,8 +53,7 @@ export default [
   },
   {
     input: 'src/crypto/index.js',
-    external: builtinModules,
-    plugins: [nodeResolve({ preferBuiltins: true }), commonjs()],
+    plugins: [nodeResolve({ preferBuiltins: false, browser: true }), commonjs()],
     output: [
       {
         format: 'esm',
