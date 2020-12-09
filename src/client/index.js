@@ -5,4 +5,6 @@ import ConnectorPool from './connectorPool/connectorPool.js';
 
 import * as concurrency from './concurrency/index.js';
 
-export { connect, connectBrowser, ConnectorPool, concurrency };
+import { newKeypair } from '../utils/crypto/index.js';
+
+export { connect, connectBrowser, ConnectorPool, newKeypair as newClientKeypair, concurrency };

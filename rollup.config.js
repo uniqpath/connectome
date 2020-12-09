@@ -2,6 +2,12 @@ import nodeResolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import builtinModules from 'builtin-modules';
 
+// Suppress "`this` has been rewritten to `undefined`" warnings
+function onwarn(warning, defaultHandler) {
+  if (warning.code === 'THIS_IS_UNDEFINED') return;
+  defaultHandler(warning);
+}
+
 export default [
   {
     input: 'src/client/index.js',
@@ -16,11 +22,7 @@ export default [
         file: 'dist/index.js'
       }
     ],
-    // Suppress "`this` has been rewritten to `undefined`" warnings
-    onwarn: (warning, defaultHandler) => {
-      if (warning.code === 'THIS_IS_UNDEFINED') return;
-      defaultHandler(warning);
-    }
+    onwarn
   },
   {
     input: 'src/server/index.js',
@@ -49,20 +51,7 @@ export default [
         format: 'cjs',
         file: 'stores/index.js'
       }
-    ]
-  },
-  {
-    input: 'src/crypto/index.js',
-    plugins: [nodeResolve({ preferBuiltins: false, browser: true }), commonjs()],
-    output: [
-      {
-        format: 'esm',
-        file: 'crypto/index.mjs'
-      },
-      {
-        format: 'cjs',
-        file: 'crypto/index.js'
-      }
-    ]
+    ],
+    onwarn
   }
 ];
