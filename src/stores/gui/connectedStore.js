@@ -1,13 +1,14 @@
 import fastJsonPatch from 'fast-json-patch';
 
 import connect from '../../client/connect/connectBrowser.js';
-import ConnectedStoreBase from './helperStores/connectedStoreBase.js';
+//import ConnectedStoreBase from './helperStores/connectedStoreBase.js';
+import WritableStore from './helperStores/writableStore.js';
 
 import { newKeypair } from '../../utils/crypto/index.js';
 
 const { applyPatch: applyJSONPatch } = fastJsonPatch;
 
-class ConnectedStore extends ConnectedStoreBase {
+class ConnectedStore extends WritableStore {
   constructor({
     address,
     ssl = false,
@@ -19,7 +20,7 @@ class ConnectedStore extends ConnectedStoreBase {
     rpcRequestTimeout,
     verbose
   } = {}) {
-    super();
+    super({});
 
     if (!address) {
       throw new Error('ConnectedStore: missing address');
@@ -33,6 +34,8 @@ class ConnectedStore extends ConnectedStoreBase {
     this.verbose = verbose;
 
     this.rpcRequestTimeout = rpcRequestTimeout;
+
+    this.connected = new WritableStore();
 
     this.connect(address, port, keypair);
   }
@@ -65,7 +68,7 @@ class ConnectedStore extends ConnectedStoreBase {
     });
 
     this.connector.on('ready', ({ sharedSecret, sharedSecretHex }) => {
-      this.setConnected(true);
+      this.connected.set(true);
       this.emit('ready');
     });
 
@@ -73,13 +76,13 @@ class ConnectedStore extends ConnectedStoreBase {
     // 💡 connected == false => while disconnected
     // 💡 connected == true => while connected
     setTimeout(() => {
-      if (this.state.connected == undefined) {
-        this.setConnected(false);
+      if (this.connected.get() == undefined) {
+        this.connected.set(false);
       }
     }, 300);
 
     this.connector.on('disconnect', () => {
-      this.setConnected(false);
+      this.connected.set(false);
     });
 
     // 💡 Special incoming JSON message: { state: ... } ... parsed as part of 'Connectome State Syncing Protocol'
@@ -91,7 +94,7 @@ class ConnectedStore extends ConnectedStoreBase {
         console.log(state);
       }
 
-      this.set(state); // will not loose / omit { connected } because ConnectedStoreBase includes this field in 'ignore'
+      this.set(state);
     });
 
     // 💡 Special incoming JSON message: { diff: ... } ... parsed as part of 'Connectome State Syncing Protocol'
