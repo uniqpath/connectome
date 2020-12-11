@@ -1,4 +1,4 @@
-import ConnectedStore from '../connectedStore.js';
+import ConnectedStore from '../../connectedStore/connectedStore.js';
 
 class ConnectDevice {
   constructor({ mcs, foreground, connectToDeviceKey }) {
