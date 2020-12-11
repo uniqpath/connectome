@@ -6,6 +6,8 @@ import SwitchDevice from './mcsHelpers/switchDevice.js';
 
 import { newKeypair } from '../../utils/crypto/index.js';
 
+import WritableStore from './helperStores/writableStore.js';
+
 class MultiConnectedStore extends MergeStore {
   constructor({
     address,
@@ -38,6 +40,8 @@ class MultiConnectedStore extends MergeStore {
     this.verbose = verbose;
 
     this.stores = {};
+
+    this.connected = new WritableStore(); // is currently active store connected ?
 
     const foreground = new Foreground({ mcs: this, thisDeviceStateKeys });
     const connectDevice = new ConnectDevice({ mcs: this, foreground, connectToDeviceKey });
