@@ -1,12 +1,11 @@
-import MergeStore from './helperStores/mergeStore.js';
+import WritableStore from '../helperStores/writableStore.js';
+import MergeStore from '../helperStores/mergeStore.js';
 
-import ConnectDevice from './mcsHelpers/connectDevice.js';
-import Foreground from './mcsHelpers/foreground.js';
-import SwitchDevice from './mcsHelpers/switchDevice.js';
+import { newKeypair } from '../../../utils/crypto/index.js';
 
-import { newKeypair } from '../../utils/crypto/index.js';
-
-import WritableStore from './helperStores/writableStore.js';
+import ConnectDevice from './helpers/connectDevice.js';
+import Foreground from './helpers/foreground.js';
+import SwitchDevice from './helpers/switchDevice.js';
 
 class MultiConnectedStore extends MergeStore {
   constructor({

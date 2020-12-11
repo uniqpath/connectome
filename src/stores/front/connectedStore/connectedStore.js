@@ -1,10 +1,8 @@
 import fastJsonPatch from 'fast-json-patch';
 
-import connect from '../../client/connect/connectBrowser.js';
-//import ConnectedStoreBase from './helperStores/connectedStoreBase.js';
-import WritableStore from './helperStores/writableStore.js';
-
-import { newKeypair } from '../../utils/crypto/index.js';
+import WritableStore from '../helperStores/writableStore.js';
+import connect from '../../../client/connect/connectBrowser.js';
+import { newKeypair } from '../../../utils/crypto/index.js';
 
 const { applyPatch: applyJSONPatch } = fastJsonPatch;
 
