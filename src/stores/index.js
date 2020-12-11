@@ -1,8 +1,8 @@
-import ConnectedStore from './gui/connectedStore.js';
-import MultiConnectedStore from './gui/multiConnectedStore.js';
-import LogStore from './gui/logStore.js';
+import ConnectedStore from './front/connectedStore.js';
+import MultiConnectedStore from './front/multiConnectedStore.js';
+import LogStore from './front/logStore.js';
 
-import MirroringStore from './proc/mirroringStore.js';
-import ProgramStateStore from './proc/programStateStore.js';
+import MirroringStore from './back/mirroringStore.js';
+import ProgramStateStore from './back/programStateStore.js';
 
 export { ConnectedStore, MultiConnectedStore, LogStore, MirroringStore, ProgramStateStore };
