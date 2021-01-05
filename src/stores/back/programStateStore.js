@@ -19,7 +19,7 @@ class ProgramStateStore extends EventEmitter {
 
     this.kvStore = new KeyValueStore();
 
-    this.prevAnnouncedState = {};
+    this.lastAnnouncedState = {};
 
     if (loadState) {
       const persistedState = loadState();
@@ -28,6 +28,7 @@ class ProgramStateStore extends EventEmitter {
         this.kvStore.update(persistedState, { announce: false });
       }
     }
+
     this.kvStore.update(initialState, { announce: false });
 
     this.stateChangesCount = 0;
@@ -36,19 +37,32 @@ class ProgramStateStore extends EventEmitter {
   }
 
   mirror(channelList) {
-    channelList.on('new_channel', channel => {
-      const state = this.omitStateFn(clone(this.state()));
-      channel.send({ state });
-    });
+    this.channelList = channelList;
 
-    this.on('diff', diff => {
-      channelList.sendToAll({ diff });
+    channelList.on('new_channel', channel => {
+      channel.send({ state: this.cloneState() });
     });
   }
 
-  update(patch, { announce = true } = {}) {
+  sendRemote({ state, diff }) {
+    if (this.channelList) {
+      this.channelList.sendToAll({ state, diff }); // one or the other
+    }
+  }
+
+  state() {
+    return this.kvStore.state;
+  }
+
+  cloneState() {
+    return this.omitStateFn(clone(this.state()));
+  }
+
+  /* State update functions */
+
+  update(patch, { announce = true, skipDiffing = false } = {}) {
     this.kvStore.update(patch);
-    this.announceStateChange(announce);
+    this.announceStateChange(announce, skipDiffing);
   }
 
   replaceSlot(slotName, value, { announce = true } = {}) {
@@ -93,6 +107,8 @@ class ProgramStateStore extends EventEmitter {
     return foundMatch;
   }
 
+  /* end State update functions */
+
   save(state) {
     if (this.saveState) {
       this.lastSavedState =
@@ -100,43 +116,45 @@ class ProgramStateStore extends EventEmitter {
     }
   }
 
-  state() {
-    return this.kvStore.state;
-  }
-
-  announceStateChange(announce = true) {
+  announceStateChange(announce = true, skipDiffing = false) {
     if (!announce) {
       return;
     }
 
-    const { state } = this.kvStore;
+    const remoteState = this.cloneState();
 
-    const prunedState = this.removeStateChangeFalseTriggers(this.omitStateFn(clone(state)));
+    if (skipDiffing) {
+      this.sendRemote({ state: remoteState });
+      this.tagState({ remoteState });
+      return;
+    }
 
-    const diff = getDiff(this.prevAnnouncedState, prunedState);
+    const diff = getDiff(this.lastAnnouncedState, this.removeStateChangeFalseTriggers(remoteState));
 
     if (diff) {
-      this.save(state);
-
-      this.emit('diff', diff);
-
+      this.sendRemote({ diff });
       this.stateChangesCount += 1;
-
-      this.prevAnnouncedState = prunedState;
-
-      this.pushStateToSubscribers();
+      this.tagState({ remoteState });
     }
+  }
+
+  tagState({ remoteState }) {
+    this.save(this.state());
+    this.lastAnnouncedState = remoteState;
+    this.pushStateToLocalSubscribers();
   }
 
   subscribe(handler) {
     this.subscriptions.push(handler);
+
     handler(this.state());
+
     return () => {
       this.subscriptions = this.subscriptions.filter(sub => sub !== handler);
     };
   }
 
-  pushStateToSubscribers() {
+  pushStateToLocalSubscribers() {
     this.subscriptions.forEach(handler => handler(this.state()));
   }
 }
