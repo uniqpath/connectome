@@ -92,14 +92,14 @@ class ConnectedStore extends WritableStore {
         console.log(state);
       }
 
-      this.set(state);
+      this.set(state); // set and announce state
     });
 
     // 💡 Special incoming JSON message: { diff: ... } ... parsed as part of 'Connectome State Syncing Protocol'
     this.connector.on('receive_diff', diff => {
       if (this.wireStateReceived) {
         applyJSONPatch(this.state, diff);
-        this.pushStateToSubscribers();
+        this.announceStateChange();
       }
     });
   }

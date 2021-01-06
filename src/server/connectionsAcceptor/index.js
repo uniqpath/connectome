@@ -1,14 +1,16 @@
-import { EventEmitter } from '../../utils/index.js';
+//import { EventEmitter } from '../../utils/index.js';
 import WsServer from './wsServer.js';
 import initializeConnection from './initializeConnection.js';
+
+import ReadableStore from '../../stores/front/helperStores/readableStore.js';
 
 import { compareValues } from '../../utils/sorting/sorting.js';
 
 import ChannelList from '../channel/channelList.js';
 
-class ConnectionsAcceptor extends EventEmitter {
+class ConnectionsAcceptor extends ReadableStore {
   constructor({ ssl = false, port, keypair, verbose }) {
-    super();
+    super({ connectionList: [] });
 
     this.ssl = ssl;
     this.port = port;
@@ -41,8 +43,39 @@ class ConnectionsAcceptor extends EventEmitter {
   start() {
     this.wsServer = new WsServer({ ssl: this.ssl, port: this.port, verbose: this.verbose });
 
-    this.wsServer.on('connection', (channel) => initializeConnection({ server: this, channel }));
-    this.wsServer.on('connection_closed', (channel) => this.emit('connection_closed', channel));
+    this.wsServer.on('connection', channel => {
+      initializeConnection({ server: this, channel });
+    });
+
+    // initializeConnection above will emit 'connection' on this object after Diffie-Hellman handshake!
+    this.on('connection', () => {
+      this.publishState();
+    });
+
+    this.wsServer.on('connection_closed', channel => {
+      this.emit('connection_closed', channel);
+      this.publishState();
+    });
+  }
+
+  // part of reactive outgoingConnections feature :: ConnectorPool as reactive (Readable)Store
+  publishState() {
+    const connectionList = this.connectionList();
+
+    // we delete attributes that are not reactive
+    // we won't publish new state on each new message just for statistics
+    // too much state syncing...
+    // but this can read on request, for example via CLI:
+    // dmt connections
+    // there the lastMessageAt attribute will be included
+    connectionList.forEach(connection => {
+      delete connection.lastMessageAt;
+      delete connection.readyState; // maybe we'll make it reactive but we probably don't need that either
+    });
+
+    // this is the same as "set()" in writable store
+    this.state = { connectionList };
+    this.announceStateChange();
   }
 
   registeredProtocols() {

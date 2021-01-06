@@ -2,8 +2,12 @@ import firstConnectWaitAndContinue from '../connect/firstConnectWaitAndContinue.
 
 import { compareValues } from '../../utils/sorting/sorting.js';
 
-class ConnectorPool {
+import ReadableStore from '../../stores/front/helperStores/readableStore.js';
+
+class ConnectorPool extends ReadableStore {
   constructor(options) {
+    super({ connectionList: [] });
+
     this.options = options;
 
     this.connectors = {};
@@ -34,10 +38,47 @@ class ConnectorPool {
           this.connectors[addressWithPort] = connector;
           this.isPreparingConnector[addressWithPort] = false;
 
+          // part of reactive outgoingConnections feature :: ConnectorPool as reactive (Readable)Store
+          this.setupConnectorReactivity(connector);
+
           success(connector);
         });
       }
     });
+  }
+
+  // part of reactive outgoingConnections feature :: ConnectorPool as reactive (Readable)Store
+  // ⚠️ lastMessageAt IS NOT REACTIVE !!
+  setupConnectorReactivity(connector) {
+    this.publishState();
+
+    connector.on('ready', () => {
+      this.publishState();
+    });
+
+    connector.on('disconnect', () => {
+      this.publishState();
+    });
+  }
+
+  // part of reactive outgoingConnections feature :: ConnectorPool as reactive (Readable)Store
+  publishState() {
+    const connectionList = this.connectionList();
+
+    // we delete attributes that are not reactive
+    // we won't publish new state on each new message just for statistics
+    // too much state syncing...
+    // but this can read on request, for example via CLI:
+    // dmt connections
+    // there the lastMessageAt attribute will be included
+    connectionList.forEach(connection => {
+      delete connection.lastMessageAt;
+      delete connection.readyState; // maybe we'll make it reactive but we probably don't need that either
+    });
+
+    // this is the same as "set()" in writable store
+    this.state = { connectionList };
+    this.announceStateChange();
   }
 
   // 💡 this method here is outgoing connections list
