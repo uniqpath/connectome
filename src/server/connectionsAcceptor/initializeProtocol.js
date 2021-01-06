@@ -10,6 +10,7 @@ function initializeProtocol({ server, channel }) {
         channel.protocol
       }/${channel.lane}, disconnecting`
     );
+
     channel.terminate();
   }
 }
