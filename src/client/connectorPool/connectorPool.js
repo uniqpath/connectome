@@ -91,7 +91,7 @@ class ConnectorPool extends ReadableStore {
         protocol: conn.protocol,
         lane: conn.lane,
         remotePubkeyHex: conn.remotePubkeyHex(),
-        ready: conn.isReady(), // 💡 connected and agreed on shared key ... used to determine if we can already send via connector or "we wait for the next rouund"
+        operational: conn.isReady(), // 💡 connected and agreed on shared key ... used to determine if we can already send via connector or "we wait for the next rouund"
         //💡 informative-nature only, not used for distributed system logic
         readyState: conn.connection && conn.connection.websocket ? conn.connection.websocket.readyState : '?', // 💡 underlying ws-connection original 'readyState' -- useful only for debugging purposes, otherwise it's just informative
         connectedAt: conn.connectedAt,
