@@ -5,9 +5,12 @@ export default function makeConnectedStore(opts) {
 
   const { connected, action: sendJSON, remoteObject, connector } = store;
 
-  function sendText(str) {
-    connector.send(str);
-  }
+  // function sendText(str) {
+  //   connector.send(str);
+  // }
 
-  return { state: store, connected, sendJSON, sendText, remoteObject };
+  const api = remoteObject.bind(store);
+
+  // sendJSON, sendText
+  return { state: store, connected, api };
 }
