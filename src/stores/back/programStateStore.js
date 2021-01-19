@@ -40,7 +40,7 @@ class ProgramStateStore extends EventEmitter {
     this.channelList = channelList;
 
     channelList.on('new_channel', channel => {
-      channel.send({ state: this.omitAndCloneState() });
+      channel.send({ state: this.lastAnnouncedState });
     });
   }
 
@@ -112,7 +112,8 @@ class ProgramStateStore extends EventEmitter {
   save() {
     if (this.saveState) {
       this.lastSavedState =
-        this.saveState({ state: clone(this.state()), lastSavedState: this.lastSavedState }) || this.lastSavedState;
+        this.saveState({ state: clone(this.state()), lastSavedState: this.lastSavedState }) ||
+        this.lastSavedState;
     }
   }
 
@@ -125,7 +126,7 @@ class ProgramStateStore extends EventEmitter {
 
     if (skipDiffing) {
       this.sendRemote({ state: remoteState });
-      this.tagState({ remoteState });
+      this.tagState({ state: remoteState });
       return;
     }
 
@@ -134,13 +135,13 @@ class ProgramStateStore extends EventEmitter {
     if (diff) {
       this.sendRemote({ diff });
       this.stateChangesCount += 1;
-      this.tagState({ remoteState });
+      this.tagState({ state: remoteState });
     }
   }
 
-  tagState({ remoteState }) {
+  tagState({ state }) {
     this.save();
-    this.lastAnnouncedState = remoteState;
+    this.lastAnnouncedState = state;
     this.pushStateToLocalSubscribers();
   }
 
