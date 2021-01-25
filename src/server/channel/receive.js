@@ -65,6 +65,8 @@ function messageReceived({ message, channel }) {
     // 💡 actions received from frontend (usually GUI... we hook this up in GUI protocol endpoint)
     const { action, namespace, payload } = jsonData;
     channel.emit('action', { action, namespace, payload });
+  } else if (jsonData.signal) {
+    channel.emit(jsonData.signal, jsonData.data);
   } else {
     channel.emit('message', message);
   }

@@ -31,6 +31,8 @@ function wireReceive({ jsonData, encryptedData, rawMessage, wasEncrypted, connec
       } else {
         connector.emit('json_rpc', rawMessage);
       }
+    } else if (jsonData.signal) {
+      connector.emit(jsonData.signal, jsonData.data);
     } else {
       connector.emit('receive', { jsonData, rawMessage });
     }
