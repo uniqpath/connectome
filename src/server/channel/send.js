@@ -6,9 +6,7 @@ import { isObject, addHeader } from './sendHelpers.js';
 import { integerToByteArray } from '../../utils/index.js';
 
 function send({ message, channel }) {
-  let signal;
   if (isObject(message)) {
-    signal = message.signal;
     message = JSON.stringify(message);
   }
 
@@ -31,13 +29,12 @@ function send({ message, channel }) {
       flag = 1;
     }
 
-    if (!signal) {
-      const _encodedMessage = flag == 1 ? naclFast.util.decodeUTF8(message) : message;
-      const encodedMessage = addHeader(_encodedMessage, flag);
+    const _encodedMessage = flag == 1 ? nacl.util.decodeUTF8(message) : message;
+    const encodedMessage = addHeader(_encodedMessage, flag);
 
-      const encryptedMessage = naclFast.secretbox(encodedMessage, nonce, channel.sharedSecret);
-      message = encryptedMessage;
-    }
+    const encryptedMessage = nacl.secretbox(encodedMessage, nonce, channel.sharedSecret);
+    message = encryptedMessage;
+
     if (channel.verbose == 'extra') {
       console.log('Encrypted bytes:');
       console.log(encryptedMessage);
