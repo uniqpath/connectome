@@ -63,6 +63,10 @@ class Channel extends EventEmitter {
     this.sentCount += 1;
   }
 
+  signal(signal, data) {
+    this.send({ signal, data });
+  }
+
   // 💡 we have to send a "special message" { state: {…} } to sync state to frontend ('other side')
   // 💡 { state: {…} } agreement is part of lower level simple connectome protocol along with { diff: { … }}, { action: { … }} (in other direction) and some others
   // 💡 we document this SOON
