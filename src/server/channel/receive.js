@@ -61,10 +61,6 @@ function messageReceived({ message, channel }) {
     }
     //} else if (jsonData.tag == 'request_file') {
     //  channel.streamFile(jsonData); // currently disabled
-  } else if (jsonData.action && jsonData.namespace) {
-    // 💡 actions received from frontend (usually GUI... we hook this up in GUI protocol endpoint)
-    const { action, namespace, payload } = jsonData;
-    channel.emit('action', { action, namespace, payload });
   } else if (jsonData.signal) {
     channel.emit(jsonData.signal, jsonData.data);
   } else {
