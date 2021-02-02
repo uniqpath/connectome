@@ -15,7 +15,7 @@ function heartbeat() {
 }
 
 class WsServer extends EventEmitter {
-  constructor({ ssl = false, port, verbose }) {
+  constructor({ ssl = false, port, verbose, server }) {
     super();
 
     process.nextTick(() => {
@@ -23,7 +23,11 @@ class WsServer extends EventEmitter {
         return protocols[0];
       };
 
-      if (ssl) {
+      if (server) {
+        this.wss = new WebSocket.Server({ server, handleProtocols });
+
+        this.continueSetup({ verbose });
+      } else if (ssl) {
         const { certPath, keyPath } = ssl;
 
         const server = https.createServer({
@@ -63,7 +67,7 @@ class WsServer extends EventEmitter {
       ws.isAlive = true;
       ws.on('pong', heartbeat);
 
-      ws.on('message', (message) => {
+      ws.on('message', message => {
         if (ws.terminated) {
           return;
         }
@@ -92,7 +96,7 @@ class WsServer extends EventEmitter {
   enumerateConnections() {
     const list = [];
 
-    this.wss.clients.forEach((ws) => {
+    this.wss.clients.forEach(ws => {
       list.push({
         address: ws._connectomeChannel.remoteAddress() || ws._connectomeChannel.remoteIp(),
         protocol: ws.protocol,
@@ -110,7 +114,7 @@ class WsServer extends EventEmitter {
   }
 
   periodicCleanupAndPing() {
-    this.wss.clients.forEach((ws) => {
+    this.wss.clients.forEach(ws => {
       if (ws.terminated) {
         return;
       }

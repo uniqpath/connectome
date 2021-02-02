@@ -7,9 +7,30 @@ const wsCLOSED = 3;
 
 import Connector from '../connector/connector.js';
 
-function establishAndMaintainConnection({ address, ssl = false, port, protocol, lane, keypair, remotePubkey, rpcRequestTimeout, verbose, tag }, { WebSocket, log }) {
+function establishAndMaintainConnection(
+  {
+    endpoint,
+    address,
+    ssl = false,
+    port,
+    protocol,
+    lane,
+    keypair,
+    remotePubkey,
+    rpcRequestTimeout,
+    verbose,
+    tag
+  },
+  { WebSocket, log }
+) {
   const wsProtocol = ssl ? 'wss' : 'ws';
-  const endpoint = port.toString().startsWith('/') ? `${wsProtocol}://${address}${port}` : `${wsProtocol}://${address}:${port}`;
+  if (endpoint) {
+    if (endpoint.startsWith('/'))
+      endpoint = (window.location.protocol.includes('s') ? 'wss' : 'ws') + '://' + window.location.host;
+  } else
+    endpoint = port.toString().startsWith('/')
+      ? `${wsProtocol}://${address}${port}`
+      : `${wsProtocol}://${address}:${port}`;
 
   const connector = new Connector({ address, protocol, lane, rpcRequestTimeout, keypair, verbose, tag });
 
@@ -49,9 +70,13 @@ function checkConnection({ connector, endpoint, protocol }, { WebSocket, log }) 
 
   if (connectionIdle(conn) || connector.decommissioned) {
     if (connectionIdle(conn)) {
-      log(`Connection ${connector.connection.endpoint} became idle, closing websocket ${conn.websocket.rand}`);
+      log(
+        `Connection ${connector.connection.endpoint} became idle, closing websocket ${conn.websocket.rand}`
+      );
     } else {
-      log(`Connection ${connector.connection.endpoint} decommisioned, closing websocket ${conn.websocket.rand}, will not retry again `);
+      log(
+        `Connection ${connector.connection.endpoint} decommisioned, closing websocket ${conn.websocket.rand}, will not retry again `
+      );
     }
 
     conn.terminate();
