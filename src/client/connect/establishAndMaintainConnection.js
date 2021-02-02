@@ -26,7 +26,8 @@ function establishAndMaintainConnection(
   const wsProtocol = ssl ? 'wss' : 'ws';
   if (endpoint) {
     if (endpoint.startsWith('/'))
-      endpoint = (window.location.protocol.includes('s') ? 'wss' : 'ws') + '://' + window.location.host;
+      endpoint =
+        (window.location.protocol.includes('s') ? 'wss' : 'ws') + '://' + window.location.host + endpoint;
   } else
     endpoint = port.toString().startsWith('/')
       ? `${wsProtocol}://${address}${port}`
