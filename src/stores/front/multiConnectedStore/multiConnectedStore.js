@@ -9,6 +9,7 @@ import SwitchDevice from './helpers/switchDevice.js';
 
 class MultiConnectedStore extends MergeStore {
   constructor({
+    endpoint,
     address,
     port,
     protocol,
@@ -20,10 +21,6 @@ class MultiConnectedStore extends MergeStore {
     verbose
   }) {
     super();
-
-    if (!address) {
-      throw new Error('MultiConnectedStore: missing address');
-    }
 
     const thisDeviceStateKeys = ['time', 'environment', 'nearbyDevices', 'notifications'];
 
