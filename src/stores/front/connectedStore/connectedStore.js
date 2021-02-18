@@ -20,7 +20,6 @@ class ConnectedStore extends WritableStore {
   } = {}) {
     super({});
 
-    this.endpoint = endpoint;
     this.protocol = protocol;
     this.lane = lane;
 

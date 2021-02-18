@@ -1,6 +1,6 @@
 {
   "name": "connectome",
-  "version": "0.0.91",
+  "version": "0.0.93",
   "description": "Dynamic realtime connectivity and state management",
   "typings": "typings/src/client/index.d.ts",
   "scripts": {
