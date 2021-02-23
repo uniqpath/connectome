@@ -13,8 +13,8 @@
         "import": "./dist/node/index.mjs",
         "require": "./dist/node/index.js"
       },
-      "default": "./dist/index.js",
-      "import": "./dist/index.mjs"
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.js"
     },
     "./server": {
       "import": "./server/index.mjs",
