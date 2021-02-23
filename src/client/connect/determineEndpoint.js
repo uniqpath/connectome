@@ -21,11 +21,11 @@ export default function determineEndpoint({ endpoint, address, port }) {
       } else if (window.location.port) {
         endpoint = `${endpoint}:${window.location.port}`;
       }
-    } else {
+    } else { // node.js ... if wss is needed, then full endpoint has to be passed in instead of address and port
       endpoint = `ws://${address}:${port}`;
     }
   }
 
-  // if endpoint is provided directly and it didn't start with '/', then use this directly
+  // if endpoint is provided directly and it didn't start with '/', then use this verbatim
   return endpoint;
 }
