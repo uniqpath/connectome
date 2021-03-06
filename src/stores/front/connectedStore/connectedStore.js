@@ -8,8 +8,8 @@ const { applyPatch: applyJSONPatch } = fastJsonPatch;
 
 class ConnectedStore extends WritableStore {
   constructor({
+    endpoint,
     address,
-    ssl = false,
     port,
     protocol,
     lane,
@@ -20,11 +20,6 @@ class ConnectedStore extends WritableStore {
   } = {}) {
     super({});
 
-    if (!address) {
-      throw new Error('ConnectedStore: missing address');
-    }
-
-    this.ssl = ssl;
     this.protocol = protocol;
     this.lane = lane;
 
@@ -35,7 +30,7 @@ class ConnectedStore extends WritableStore {
 
     this.connected = new WritableStore();
 
-    this.connect(address, port, keypair);
+    this.connect(endpoint, address, port, keypair);
   }
 
   signal(signal, data) {
@@ -53,10 +48,10 @@ class ConnectedStore extends WritableStore {
     return this.connector.remoteObject(handle);
   }
 
-  connect(address, port, keypair) {
+  connect(endpoint, address, port, keypair) {
     this.connector = connect({
+      endpoint,
       address,
-      ssl: this.ssl,
       port,
       protocol: this.protocol,
       lane: this.lane,

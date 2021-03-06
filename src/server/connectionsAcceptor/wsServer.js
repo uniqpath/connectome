@@ -1,6 +1,4 @@
 import WebSocket from 'ws';
-import fs from 'fs';
-import https from 'https';
 
 import { EventEmitter } from '../../utils/index.js';
 
@@ -14,8 +12,16 @@ function heartbeat() {
   this.isAlive = true;
 }
 
+// example of ssl server that can be passed in as `server`
+// const { certPath, keyPath } = ssl;
+
+// const server = https.createServer({
+//   cert: fs.readFileSync(certPath),
+//   key: fs.readFileSync(keyPath)
+// });
+
 class WsServer extends EventEmitter {
-  constructor({ ssl = false, port, verbose, server }) {
+  constructor({ port, server, verbose }) {
     super();
 
     process.nextTick(() => {
@@ -24,31 +30,17 @@ class WsServer extends EventEmitter {
       };
 
       if (server) {
-        this.wss = new WebSocket.Server({ server, handleProtocols });
-
-        this.continueSetup({ verbose });
-      } else if (ssl) {
-        const { certPath, keyPath } = ssl;
-
-        const server = https.createServer({
-          cert: fs.readFileSync(certPath),
-          key: fs.readFileSync(keyPath)
-        });
-
-        this.wss = new WebSocket.Server({ server, handleProtocols });
-
-        this.continueSetup({ verbose });
-
-        server.listen(port);
+        this.webSocketServer = new WebSocket.Server({ server, handleProtocols });
       } else {
-        this.wss = new WebSocket.Server({ port, handleProtocols });
-        this.continueSetup({ verbose });
+        this.webSocketServer = new WebSocket.Server({ port, handleProtocols });
       }
+
+      this.continueSetup({ verbose });
     });
   }
 
   continueSetup({ verbose }) {
-    this.wss.on('connection', (ws, req) => {
+    this.webSocketServer.on('connection', (ws, req) => {
       const channel = new Channel(ws, { verbose });
 
       channel._remoteIp = getRemoteIp(req);
@@ -96,7 +88,7 @@ class WsServer extends EventEmitter {
   enumerateConnections() {
     const list = [];
 
-    this.wss.clients.forEach(ws => {
+    this.webSocketServer.clients.forEach(ws => {
       list.push({
         address: ws._connectomeChannel.remoteAddress() || ws._connectomeChannel.remoteIp(),
         protocol: ws.protocol,
@@ -114,7 +106,7 @@ class WsServer extends EventEmitter {
   }
 
   periodicCleanupAndPing() {
-    this.wss.clients.forEach(ws => {
+    this.webSocketServer.clients.forEach(ws => {
       if (ws.terminated) {
         return;
       }

@@ -9,12 +9,14 @@ import { compareValues } from '../../utils/sorting/sorting.js';
 import ChannelList from '../channel/channelList.js';
 
 class ConnectionsAcceptor extends ReadableStore {
-  constructor({ ssl = false, port, keypair, verbose, server }) {
+  constructor({ port, keypair, server, verbose }) {
     super({ connectionList: [] });
-    this.server = server;
-    this.ssl = ssl;
+
     this.port = port;
     this.keypair = keypair;
+
+    this.server = server;
+
     this.verbose = verbose;
 
     this.protocols = {};
@@ -42,7 +44,6 @@ class ConnectionsAcceptor extends ReadableStore {
 
   start() {
     this.wsServer = new WsServer({
-      ssl: this.ssl,
       port: this.port,
       verbose: this.verbose,
       server: this.server
