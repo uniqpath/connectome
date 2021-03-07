@@ -7,6 +7,8 @@
     "build": "rollup -c && node scripts/build-artifacts",
     "prepublishOnly": "npm run build"
   },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "exports": {
     ".": {
       "node": {
