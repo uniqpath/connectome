@@ -12,5 +12,5 @@ export default function makeConnectedStore(opts) {
   const api = remoteObject.bind(store);
 
   // sendJSON, sendText
-  return { state: store, connected, api };
+  return { state: store, connected, api, connector };
 }
