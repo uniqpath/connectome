@@ -93,8 +93,10 @@ class Connector extends EventEmitter {
 
           this.emit('ready', { sharedSecret, sharedSecretHex });
 
+          const tag = this.tag ? ` (${this.tag})` : '';
+
           console.log(
-            `✓ Ready: DMT Protocol Connector [ ${this.address} (${this.tag}) · ${this.protocol}/${this.lane} ]`
+            `✓ Secure channel ready [ ${this.address}${tag} · Protocol ${this.protocol} · Negotiating lane: ${this.lane} ]`
           );
         })
         .catch(e => {
@@ -158,8 +160,15 @@ class Connector extends EventEmitter {
 
           this.remoteObject('Auth')
             .call('finalizeHandshake', { lane })
-            .then(() => {})
-            .catch(reject);
+            .then(() => {
+              //console.log(`✓ Lane ${this.lane} negotiated `);
+            })
+            .catch((e) => {
+              console.log(`x Lane ${this.lane} error or not available`);
+              //console.log(`finalizeHandshake error: `);
+              //console.log(e);
+              reject(e);
+            });
         })
         .catch(reject);
     });
