@@ -6,7 +6,7 @@ function initializeProtocol({ server, channel }) {
     onConnect({ channel, channelList });
   } else {
     console.log(
-      `Error: request from ${channel.remoteIp()} (${channel.remotePubkeyHex()}) - unknown protocol ${
+      `Error: request from ${channel.remoteIp()} (${channel.remotePubkeyHex()}) - unknown protocol lane ${
         channel.protocol
       }/${channel.lane}, disconnecting`
     );
