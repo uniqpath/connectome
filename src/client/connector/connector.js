@@ -10,7 +10,7 @@ import { EventEmitter, listify, hexToBuffer, bufferToHex } from '../../utils/ind
 import RpcClient from '../rpc/client.js';
 import RPCTarget from '../rpc/RPCTarget.js';
 
-import { newKeypair } from '../../utils/crypto/index.js';
+import { newKeypair, acceptKeypair } from '../../utils/crypto/index.js';
 
 class Connector extends EventEmitter {
   constructor({
@@ -27,7 +27,7 @@ class Connector extends EventEmitter {
     this.protocol = protocol;
     this.lane = lane;
 
-    const { privateKey: clientPrivateKey, publicKey: clientPublicKey } = keypair;
+    const { privateKey: clientPrivateKey, publicKey: clientPublicKey } = acceptKeypair(keypair);
 
     this.clientPrivateKey = clientPrivateKey;
     this.clientPublicKey = clientPublicKey;
