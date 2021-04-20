@@ -113,8 +113,9 @@ class Connector extends EventEmitter {
       }
 
       if (this.connected == undefined) {
+        const tag = this.tag ? ` (${this.tag})` : '';
         console.log(
-          `Connector ${this.address} (${this.tag}) was not able to connect at first try, setting READY to false`
+          `Connector ${this.address}${tag} was not able to connect at first try, setting READY to false`
         );
       }
 
@@ -163,7 +164,7 @@ class Connector extends EventEmitter {
             .then(() => {
               //console.log(`✓ Lane ${this.lane} negotiated `);
             })
-            .catch((e) => {
+            .catch(e => {
               console.log(`x Lane ${this.lane} error or not available`);
               //console.log(`finalizeHandshake error: `);
               //console.log(e);
