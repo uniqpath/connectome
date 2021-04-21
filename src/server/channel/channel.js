@@ -7,6 +7,8 @@ import RpcClient from '../../client/rpc/client.js';
 
 import RPCTarget from '../../client/rpc/RPCTarget.js';
 
+import { MirroringStore } from '../../stores';
+
 class Channel extends EventEmitter {
   constructor(ws, { rpcRequestTimeout, verbose = false }) {
     super();
@@ -23,6 +25,55 @@ class Channel extends EventEmitter {
 
     this.sentCount = 0;
     this.receivedCount = 0;
+
+    this.shapes = {};
+  }
+
+  // Usage:
+  //
+  // per-channel (connection) state
+  //
+  // shape('name', state) OR
+  // shape('name').set(state)
+  // shape('name').update(...)
+  // returns mirroring store api
+  //
+  // we don't do diffing on clientside here, no need and it would be extemely hard to maintain in sync
+  // this is for syncing per-state smaller state
+  //
+  // however when setting shape state on backend we do check if there was any diff and only then send the entire state over
+  //
+  // always change shape state in response to some frontend action through that channel..
+  // not through timer or something like this.. channel may be long dead
+  shape(name, state) {
+    if (!this.shapes[name]) {
+      this.shapes[name] = new MirroringStore();
+
+      // ⚠️ TODO: will these channels get garbage collected if they have shapes with event handlers on them ?
+      this.shapes[name].on('diff', () => {
+        // we always send entire state here instead of diffs... for a good reason, see above in description of function
+        const { state } = this.shapes[name];
+        this.send({ shape: { name, state } });
+      });
+    }
+
+    if (state) {
+      this.shapes[name].set(state);
+    }
+
+    return this.shapes[name];
+  }
+
+  clearShape(...names) {
+    names.forEach(name => {
+      const { state } = this.shape(name);
+      if (state != null) {
+        this.shape(name).set(null); // will send empty state based on diff handler
+      } else {
+        // if it was already empty (but we still want to clear clientside from previously set state)
+        this.send({ shape: { name } }); // clear shape
+      }
+    });
   }
 
   setLane(lane) {
