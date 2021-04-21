@@ -1,6 +1,6 @@
 import firstConnectWaitAndContinue from '../connect/firstConnectWaitAndContinue.js';
 
-import { compareValues } from '../../utils/sorting/sorting.js';
+import { compareKeys } from '../../utils/sorting/sorting.js';
 
 import ReadableStore from '../../stores/front/helperStores/readableStore.js';
 
@@ -99,7 +99,7 @@ class ConnectorPool extends ReadableStore {
       };
     });
 
-    const order = compareValues('protocol', 'lane');
+    const order = compareKeys('protocol', 'lane');
     return list.sort(order);
   }
 }

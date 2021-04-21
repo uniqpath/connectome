@@ -4,7 +4,7 @@ import initializeConnection from './initializeConnection.js';
 
 import ReadableStore from '../../stores/front/helperStores/readableStore.js';
 
-import { compareValues } from '../../utils/sorting/sorting.js';
+import { compareKeys } from '../../utils/sorting/sorting.js';
 
 import ChannelList from '../channel/channelList.js';
 
@@ -92,7 +92,7 @@ class ConnectionsAcceptor extends ReadableStore {
 
   connectionList() {
     const list = this.wsServer.enumerateConnections().reverse();
-    const order = compareValues('protocol', 'lane');
+    const order = compareKeys('protocol', 'lane');
     return list.sort(order);
   }
 }
