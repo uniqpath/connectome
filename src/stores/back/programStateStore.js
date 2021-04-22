@@ -19,7 +19,7 @@ class ProgramStateStore extends EventEmitter {
 
     this.kvStore = new KeyValueStore();
 
-    this.lastAnnouncedState = {};
+    this.lastAnnouncedState = initialState;
 
     if (loadState) {
       const persistedState = loadState();
