@@ -47,7 +47,7 @@ class Channel extends EventEmitter {
   // not through timer or something like this.. channel may be long dead
   shape(name, state) {
     if (!this.shapes[name]) {
-      this.shapes[name] = new MirroringStore();
+      this.shapes[name] = new MirroringStore(null);
 
       // ⚠️ TODO: will these channels get garbage collected if they have shapes with event handlers on them ?
       this.shapes[name].on('diff', () => {
