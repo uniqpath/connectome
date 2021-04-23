@@ -44,21 +44,21 @@ class ChannelList extends EventEmitter {
       channel
         .remoteObject(remoteObjectHandle)
         .call(method, args)
-        .catch((e) => {
+        .catch(e => {
           console.log(e);
         });
     }
   }
 
   multiCall(remoteObjectHandle, method, args) {
-    const promises = this.channels.map((channel) =>
+    const promises = this.channels.map(channel =>
       channel.remoteObject(remoteObjectHandle).call(method, args)
     );
     return Promise.all(promises);
   }
 
   reportStatus() {
-    const connList = this.channels.map((channel) => {
+    const connList = this.channels.map(channel => {
       const result = {
         ip: channel.remoteIp(),
         address: channel.remoteAddress(),
@@ -69,6 +69,20 @@ class ChannelList extends EventEmitter {
     });
 
     this.emit('status', { connList });
+  }
+
+  [Symbol.iterator]() {
+    let counter = 0;
+    return {
+      next: () => {
+        if (counter < this.channels.length) {
+          const result = { value: this.channels[counter], done: false };
+          counter++;
+          return result;
+        }
+        return { done: true };
+      }
+    };
   }
 }
 
