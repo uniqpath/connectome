@@ -9,7 +9,7 @@ class MirroringStore extends EventEmitter {
     super();
 
     this.state = initialState;
-    this.lastAnnouncedState = this.state;
+    this.lastAnnouncedState = clone(initialState);
   }
 
   mirror(channelList) {
