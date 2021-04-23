@@ -6,10 +6,37 @@ import KeyValueStore from './twoLevelMergeKVStore.js';
 
 import getDiff from './lib/getDiff.js';
 
+// WARNING: initialState can mess with loaded state!
+// example:
+//
+// new ProgramStateStore({ messages: [] })
+//
+// this won't have the intented consequences because this state will override
+// any messages loaded from the file... use carefuly!
+//
+// initial state is merged into loaded state (2-level merge) and in this case when slot is attay instead of object
+// it will set that slot to empty array
+
+// Do this instead:
+//
+// const slotName = 'contactMessages';
+
+//  if (!store.state()[slotName]) {
+//    store.replaceSlot(slotName, [], { announce: false });
+//  }
+
+//  store.pushToSlotArrayElement(slotName, data);
+//
+
 class ProgramStateStore extends EventEmitter {
   constructor(
     initialState = {},
-    { loadState = null, saveState = null, omitStateFn = x => x, removeStateChangeFalseTriggers = x => x } = {}
+    {
+      loadState = null,
+      saveState = null,
+      omitStateFn = x => x,
+      removeStateChangeFalseTriggers = x => x
+    } = {}
   ) {
     super();
 
@@ -17,19 +44,23 @@ class ProgramStateStore extends EventEmitter {
     this.saveState = saveState;
     this.removeStateChangeFalseTriggers = removeStateChangeFalseTriggers;
 
+    //this.lastAnnouncedState = clone(initialState); // alternative to below...
+
     this.kvStore = new KeyValueStore();
 
-    this.lastAnnouncedState = initialState;
+    const announce = false;
 
     if (loadState) {
       const persistedState = loadState();
 
       if (persistedState) {
-        this.kvStore.update(persistedState, { announce: false });
+        this.kvStore.update(persistedState, { announce });
       }
     }
 
-    this.kvStore.update(initialState, { announce: false });
+    this.kvStore.update(initialState, { announce });
+
+    this.lastAnnouncedState = this.omitAndCloneState(); // think more about this!
 
     this.stateChangesCount = 0;
 
@@ -52,6 +83,10 @@ class ProgramStateStore extends EventEmitter {
 
   state() {
     return this.kvStore.state;
+  }
+
+  get() {
+    return this.state();
   }
 
   omitAndCloneState() {
