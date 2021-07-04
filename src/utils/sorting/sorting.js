@@ -2,17 +2,17 @@
 //
 // usage:
 // array is sorted by band only
-// singers.sort(compareKeys('band'));
+// singers.sort(orderBy('band'));
 //
 // in descending order
-// singers.sort(compareKeys('band', null, 'desc'));
+// singers.sort(orderBy('band', null, 'desc'));
 //
 // array is sorted by band, then by year in ascending order by default
-// singers.sort(compareKeys('band', 'year'));
+// singers.sort(orderBy('band', 'year'));
 //
 // array is sorted by band, then by year in descending order
-// singers.sort(compareKeys('band', 'year', 'desc'));
-function compareKeys(key, key2, order = 'asc') {
+// singers.sort(orderBy('band', 'year', 'desc'));
+function orderBy(key, key2, order = 'asc') {
   function _comparison(a, b, key) {
     if (!a.hasOwnProperty(key) || !b.hasOwnProperty(key)) {
       return 0;
@@ -42,4 +42,4 @@ function compareKeys(key, key2, order = 'asc') {
   };
 }
 
-export { compareKeys };
+export { orderBy };
