@@ -85,8 +85,8 @@ class ProgramStateStore extends EventEmitter {
     return this.kvStore.state;
   }
 
-  get() {
-    return this.state();
+  get(key) {
+    return key ? this.state()[key] : this.state();
   }
 
   omitAndCloneState() {
