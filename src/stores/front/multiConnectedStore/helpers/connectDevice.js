@@ -33,12 +33,7 @@ class ConnectDevice {
   }
 
   getDeviceKey(state) {
-    const { device } = state;
-
-    if (device && device.deviceKey) {
-      const { deviceKey } = device;
-      return deviceKey;
-    }
+    return state?.device?.deviceKey;
   }
 
   connectThisDevice({ address }) {
@@ -54,13 +49,13 @@ class ConnectDevice {
       if (deviceKey) {
         if (!this.thisDeviceAlreadySetup) {
           this.mcs.set({ activeDeviceKey: deviceKey });
-          this.setConnectedStore({ deviceKey, store: thisStore });
+          this.initNewStore({ deviceKey, store: thisStore });
         }
 
         const needToConnectAnotherDevice = this.connectToDeviceKey && this.connectToDeviceKey != deviceKey;
 
-        if (this.mcs.activeDeviceKey() == deviceKey && !needToConnectAnotherDevice) {
-          const optimisticDeviceName = state.device.deviceName;
+        if (!needToConnectAnotherDevice && this.mcs.activeDeviceKey() == deviceKey) {
+          const optimisticDeviceName = state.device?.deviceName;
           this.foreground.set(state, { optimisticDeviceName });
         }
 
@@ -83,7 +78,7 @@ class ConnectDevice {
   connectOtherDevice({ address, deviceKey }) {
     const newStore = this.createStore({ address });
 
-    this.setConnectedStore({ deviceKey, store: newStore });
+    this.initNewStore({ deviceKey, store: newStore });
 
     newStore.subscribe(state => {
       if (this.mcs.activeDeviceKey() == deviceKey) {
@@ -93,10 +88,14 @@ class ConnectDevice {
     });
   }
 
+  initNewStore({ deviceKey, store }) {
+    this.mcs.stores[deviceKey] = store; // add this store to our list of multi-connected stores
+
+    this.setConnectedStore({ deviceKey, store });
+  }
+
   // transfer connected state from currently active connected store into the "connected" store on MultiConnectedStore
   setConnectedStore({ deviceKey, store }) {
-    this.mcs.stores[deviceKey] = store;
-
     store.connected.subscribe(connected => {
       if (this.mcs.activeDeviceKey() == deviceKey) {
         this.mcs.connected.set(connected);
