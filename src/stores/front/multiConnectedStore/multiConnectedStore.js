@@ -44,12 +44,16 @@ class MultiConnectedStore extends MergeStore {
     const foreground = new Foreground({ mcs: this, thisDeviceStateKeys });
     const connectDevice = new ConnectDevice({ mcs: this, foreground, connectToDeviceKey });
 
+    this.connectDevice = connectDevice; // used only for preconnect method
+
     this.switchDevice = new SwitchDevice({ mcs: this, connectDevice, foreground });
     this.switchDevice.on('connect_to_device_key_failed', () => {
       this.emit('connect_to_device_key_failed');
     });
 
     this.localDeviceStore = connectDevice.connectThisDevice({ address });
+
+    this.locallyConnected = this.localDeviceStore.connected;
   }
 
   signal(signal, data) {
@@ -57,7 +61,7 @@ class MultiConnectedStore extends MergeStore {
       this.activeStore().signal(signal, data);
     } else {
       console.log(
-        `Error emitting remote signal ${signal} / ${data}. Debug info: activeDeviceKey=${this.activeDeviceKey()}`
+        `MCS: Error emitting remote signal ${signal} / ${data}. Debug info: activeDeviceKey=${this.activeDeviceKey()}`
       );
     }
   }
@@ -74,6 +78,11 @@ class MultiConnectedStore extends MergeStore {
     console.log(
       `Error obtaining remote object ${objectName}. Debug info: activeDeviceKey=${this.activeDeviceKey()}`
     );
+  }
+
+  // only for other devices
+  preconnect({ address, deviceKey }) {
+    this.connectDevice.connectOtherDevice({ address, deviceKey });
   }
 
   switch({ address, deviceKey, deviceName }) {
