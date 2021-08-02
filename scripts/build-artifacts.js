@@ -1,4 +1,5 @@
-import fs from 'fs';
+const fs = require('fs');
+//import fs from 'fs';
 
 fs.writeFileSync(
   'server/package.json',

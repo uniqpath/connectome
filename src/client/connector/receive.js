@@ -50,6 +50,10 @@ function wireReceive({ jsonData, encryptedData, rawMessage, wasEncrypted, connec
     if (flag == 1) {
       const decodedMessage = nacl.util.encodeUTF8(decryptedMessage);
 
+      // if (connector.verbose) {
+      //   console.log(`Received message: ${decodedMessage}`);
+      // }
+
       try {
         const jsonData = JSON.parse(decodedMessage);
 
