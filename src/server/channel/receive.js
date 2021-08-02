@@ -78,6 +78,10 @@ function messageReceived({ message, channel }) {
       //   console.log();
       // }
 
+      if (channel.verbose) {
+        console.log(`Message: ${decodedMessage}`);
+      }
+
       handleMessage(channel, decodedMessage);
     } else {
       // binary
