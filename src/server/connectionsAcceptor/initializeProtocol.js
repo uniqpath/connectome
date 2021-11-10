@@ -1,17 +1,11 @@
 function initializeProtocol({ server, channel }) {
-  if (server.protocols[channel.protocol] && server.protocols[channel.protocol][channel.lane]) {
-    const { onConnect, channelList } = server.protocols[channel.protocol][channel.lane];
+  if (server.protocols[channel.protocol]) {
+    const { onConnect, channelList } = server.protocols[channel.protocol];
     channelList.add(channel);
 
     onConnect({ channel, channelList });
-  } else {
-    console.log(
-      `Error: request from ${channel.remoteIp()} (${channel.remotePubkeyHex()}) - unknown protocol lane ${
-        channel.protocol
-      }/${channel.lane}, disconnecting`
-    );
 
-    channel.terminate();
+    return true;
   }
 }
 
