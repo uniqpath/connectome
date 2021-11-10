@@ -1,45 +1,33 @@
-import ConnectedStore from '../../connectedStore/connectedStore.js';
+//import ConnectedStore from '../../connectedStore/connectedStore.js';
+import connect from '../../../../client/connect/connectBrowser.js';
 
-class ConnectDevice {
+export default class ConnectDevice {
   constructor({ mcs, foreground, connectToDeviceKey }) {
     this.mcs = mcs;
     this.foreground = foreground;
     this.connectToDeviceKey = connectToDeviceKey;
   }
 
-  createStore({ address }) {
-    const {
-      port,
-      protocol,
-      lane,
-      logStore,
-      rpcRequestTimeout,
-      verbose,
-      privateKey: clientPrivateKey,
-      publicKey: clientPublicKey
-    } = this.mcs;
-
-    return new ConnectedStore({
-      address,
-      port,
-      protocol,
-      lane,
-      clientPrivateKey,
-      clientPublicKey,
-      logStore,
-      rpcRequestTimeout,
-      verbose
-    });
+  createConnector({ host }) {
+    const { port, protocol, logStore, rpcRequestTimeout, verbose, keypair } = this.mcs;
+    return connect({ host, port, protocol, keypair, rpcRequestTimeout, verbose });
   }
 
   getDeviceKey(state) {
     return state?.device?.deviceKey;
   }
 
-  connectThisDevice({ address }) {
-    const thisStore = this.createStore({ address });
+  // todo: what happens if this device key changes?
+  // and also other deviceKeys
+  // this is rare and deviceKeys are unique identifiers for devices but still
+  // at least for this device we have to handle deviceKey changes!
+  // for other devices maybe it will work naturally as well
+  // only that we'll keep more connected stores than neccessary who will retry connections
+  // for devices that are no longer coming back under that deviceKey.. this resolves (clears) after GUI reloads
+  connectThisDevice({ host }) {
+    const thisConnector = this.createConnector({ host });
 
-    thisStore.subscribe(state => {
+    thisConnector.state.subscribe(state => {
       if (!state.nearbyDevices) {
         state.nearbyDevices = [];
       }
@@ -49,12 +37,13 @@ class ConnectDevice {
       if (deviceKey) {
         if (!this.thisDeviceAlreadySetup) {
           this.mcs.set({ activeDeviceKey: deviceKey });
-          this.initNewStore({ deviceKey, store: thisStore });
+          this.initNewConnector({ deviceKey, connector: thisConnector });
         }
 
         const needToConnectAnotherDevice = this.connectToDeviceKey && this.connectToDeviceKey != deviceKey;
 
         if (!needToConnectAnotherDevice && this.mcs.activeDeviceKey() == deviceKey) {
+          // state.device?.deviceName ==> ?. is not strictly neccessary because we always assume device.deviceName in every state
           const optimisticDeviceName = state.device?.deviceName;
           this.foreground.set(state, { optimisticDeviceName });
         }
@@ -72,15 +61,15 @@ class ConnectDevice {
       }
     });
 
-    return thisStore;
+    return thisConnector;
   }
 
-  connectOtherDevice({ address, deviceKey }) {
-    const newStore = this.createStore({ address });
+  connectOtherDevice({ host, deviceKey }) {
+    const connector = this.createConnector({ host });
 
-    this.initNewStore({ deviceKey, store: newStore });
+    this.initNewConnector({ deviceKey, connector });
 
-    newStore.subscribe(state => {
+    connector.state.subscribe(state => {
       if (this.mcs.activeDeviceKey() == deviceKey) {
         const optimisticDeviceName = state.device ? state.device.deviceName : null;
         this.foreground.set(state, { optimisticDeviceName });
@@ -88,20 +77,18 @@ class ConnectDevice {
     });
   }
 
-  initNewStore({ deviceKey, store }) {
-    this.mcs.stores[deviceKey] = store; // add this store to our list of multi-connected stores
+  initNewConnector({ deviceKey, connector }) {
+    this.mcs.connectors[deviceKey] = connector; // add this store to our list of multi-connected stores
 
-    this.setConnectedStore({ deviceKey, store });
+    this.setConnectedStore({ deviceKey, connector });
   }
 
   // transfer connected state from currently active connected store into the "connected" store on MultiConnectedStore
-  setConnectedStore({ deviceKey, store }) {
-    store.connected.subscribe(connected => {
+  setConnectedStore({ deviceKey, connector }) {
+    connector.connected.subscribe(connected => {
       if (this.mcs.activeDeviceKey() == deviceKey) {
         this.mcs.connected.set(connected);
       }
     });
   }
 }
-
-export default ConnectDevice;

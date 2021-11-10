@@ -4,12 +4,14 @@ import clone from './lib/clone.js';
 
 import KeyValueStore from './twoLevelMergeKVStore.js';
 
+import Slot from './slot';
+
 import getDiff from './lib/getDiff.js';
 
 // WARNING: initialState can mess with loaded state!
 // example:
 //
-// new ProgramStateStore({ messages: [] })
+// new SlottedStore({ messages: [] })
 //
 // this won't have the intented consequences because this state will override
 // any messages loaded from the file... use carefuly!
@@ -19,24 +21,12 @@ import getDiff from './lib/getDiff.js';
 
 // Do this instead:
 //
-// const slotName = 'contactMessages';
+// store.slot('notifications').makeArray().pushToArray(data);
 
-//  if (!store.state()[slotName]) {
-//    store.replaceSlot(slotName, [], { announce: false });
-//  }
-
-//  store.pushToSlotArrayElement(slotName, data);
-//
-
-class ProgramStateStore extends EventEmitter {
+export default class SlottedStore extends EventEmitter {
   constructor(
     initialState = {},
-    {
-      loadState = null,
-      saveState = null,
-      omitStateFn = x => x,
-      removeStateChangeFalseTriggers = x => x
-    } = {}
+    { loadState = null, saveState = null, omitStateFn = x => x, removeStateChangeFalseTriggers = x => x } = {}
   ) {
     super();
 
@@ -46,19 +36,18 @@ class ProgramStateStore extends EventEmitter {
 
     //this.lastAnnouncedState = clone(initialState); // alternative to below...
 
+    this.slots = {};
     this.kvStore = new KeyValueStore();
-
-    const announce = false;
 
     if (loadState) {
       const persistedState = loadState();
 
       if (persistedState) {
-        this.kvStore.update(persistedState, { announce });
+        this.kvStore.update(persistedState);
       }
     }
 
-    this.kvStore.update(initialState, { announce });
+    this.kvStore.update(initialState);
 
     this.lastAnnouncedState = this.omitAndCloneState(); // think more about this!
 
@@ -67,7 +56,7 @@ class ProgramStateStore extends EventEmitter {
     this.subscriptions = [];
   }
 
-  mirror(channelList) {
+  syncOver(channelList) {
     this.channelList = channelList;
 
     channelList.on('new_channel', channel => {
@@ -95,51 +84,17 @@ class ProgramStateStore extends EventEmitter {
 
   /* State update functions */
 
+  slot(name) {
+    if (!this.slots[name]) {
+      this.slots[name] = new Slot({ name, parent: this });
+    }
+
+    return this.slots[name];
+  }
+
   update(patch, { announce = true, skipDiffing = false } = {}) {
     this.kvStore.update(patch);
     this.announceStateChange(announce, skipDiffing);
-  }
-
-  replaceSlot(slotName, value, { announce = true } = {}) {
-    this.kvStore.replaceBaseKey(slotName, value);
-    this.announceStateChange(announce);
-  }
-
-  clearSlot(slotName, { announce = true } = {}) {
-    this.kvStore.clearBaseKey(slotName);
-    this.announceStateChange(announce);
-  }
-
-  replaceSlotElement({ slotName, key, value }, { announce = true } = {}) {
-    this.kvStore.replaceSubKey({ baseKey: slotName, key, value });
-    this.announceStateChange(announce);
-  }
-
-  removeSlotElement({ slotName, key }, { announce = true } = {}) {
-    this.kvStore.removeSubKey({ baseKey: slotName, key });
-    this.announceStateChange(announce);
-  }
-
-  pushToSlotArrayElement(slotName, entry, { announce = true } = {}) {
-    this.kvStore.pushToArray(slotName, entry);
-    this.announceStateChange(announce);
-  }
-
-  removeFromSlotArrayElement(slotName, removePredicate, { announce = true } = {}) {
-    this.kvStore.removeFromArray(slotName, removePredicate);
-    this.announceStateChange(announce);
-  }
-
-  replaceSlotArrayElement(slotName, selectorPredicate, value, { announce = true } = {}) {
-    const foundMatch = this.kvStore.replaceArrayElement(slotName, selectorPredicate, value);
-    this.announceStateChange(announce);
-    return foundMatch;
-  }
-
-  updateSlotArrayElement(slotName, selectorPredicate, value, { announce = true } = {}) {
-    const foundMatch = this.kvStore.updateArrayElement(slotName, selectorPredicate, value);
-    this.announceStateChange(announce);
-    return foundMatch;
   }
 
   /* end State update functions */
@@ -168,6 +123,7 @@ class ProgramStateStore extends EventEmitter {
     const diff = getDiff(this.lastAnnouncedState, this.removeStateChangeFalseTriggers(remoteState));
 
     if (diff) {
+      //this.emit('diff', diff)
       this.sendRemote({ diff });
       this.stateChangesCount += 1;
       this.tagState({ state: remoteState });
@@ -194,5 +150,3 @@ class ProgramStateStore extends EventEmitter {
     this.subscriptions.forEach(handler => handler(this.state()));
   }
 }
-
-export default ProgramStateStore;

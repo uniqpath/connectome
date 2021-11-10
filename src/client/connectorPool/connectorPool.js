@@ -14,29 +14,29 @@ class ConnectorPool extends ReadableStore {
     this.isPreparingConnector = {};
   }
 
-  getConnector({ address, port, tag }) {
-    const addressWithPort = `${address}:${port}`;
+  getConnector({ host, port, tag }) {
+    const hostWithPort = `${host}:${port}`;
 
-    if (!address || !port) {
-      throw new Error(`Must provide both address and port: ${addressWithPort}`);
+    if (!host || !port) {
+      throw new Error(`Must provide both host and port: ${hostWithPort}`);
     }
 
     return new Promise((success, reject) => {
-      if (this.connectors[addressWithPort]) {
-        success(this.connectors[addressWithPort]);
+      if (this.connectors[hostWithPort]) {
+        success(this.connectors[hostWithPort]);
         return;
       }
 
-      if (this.isPreparingConnector[addressWithPort]) {
+      if (this.isPreparingConnector[hostWithPort]) {
         setTimeout(() => {
-          this.getConnector({ address, port, tag }).then(success);
+          this.getConnector({ host, port, tag }).then(success);
         }, 10);
       } else {
-        this.isPreparingConnector[addressWithPort] = true;
+        this.isPreparingConnector[hostWithPort] = true;
 
-        firstConnectWaitAndContinue({ ...this.options, ...{ address, port, tag } }).then(connector => {
-          this.connectors[addressWithPort] = connector;
-          this.isPreparingConnector[addressWithPort] = false;
+        firstConnectWaitAndContinue({ ...this.options, ...{ host, port, tag } }).then(connector => {
+          this.connectors[hostWithPort] = connector;
+          this.isPreparingConnector[hostWithPort] = false;
 
           // part of reactive outgoingConnections feature :: ConnectorPool as reactive (Readable)Store
           this.setupConnectorReactivity(connector);
@@ -89,7 +89,7 @@ class ConnectorPool extends ReadableStore {
       return {
         address,
         protocol: conn.protocol,
-        lane: conn.lane,
+        //lane: conn.lane,
         remotePubkeyHex: conn.remotePubkeyHex(),
         operational: conn.isReady(), // 💡 connected and agreed on shared key ... used to determine if we can already send via connector or "we wait for the next rouund"
         //💡 informative-nature only, not used for distributed system logic
@@ -99,7 +99,7 @@ class ConnectorPool extends ReadableStore {
       };
     });
 
-    const order = orderBy('protocol', 'lane');
+    const order = orderBy('protocol');
     return list.sort(order);
   }
 }

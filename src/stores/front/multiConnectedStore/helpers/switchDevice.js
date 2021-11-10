@@ -1,6 +1,6 @@
 import Emitter from '../../../../utils/emitter/index.js';
 
-class SwitchDevice extends Emitter {
+export default class SwitchDevice extends Emitter {
   constructor({ mcs, connectDevice, foreground }) {
     super();
 
@@ -11,21 +11,21 @@ class SwitchDevice extends Emitter {
 
   switchState({ deviceKey, deviceName }) {
     this.mcs.setMerge({ activeDeviceKey: deviceKey });
-    const { state, connected } = this.mcs.stores[deviceKey];
-    this.foreground.set(state, { optimisticDeviceName: deviceName });
+    const { state, connected } = this.mcs.connectors[deviceKey];
+    this.foreground.set(state.get(), { optimisticDeviceName: deviceName });
     this.mcs.connected.set(connected.get());
   }
 
-  switch({ address, deviceKey, deviceName }) {
-    if (this.mcs.stores[deviceKey]) {
+  switch({ host, deviceKey, deviceName }) {
+    if (this.mcs.connectors[deviceKey]) {
       this.switchState({ deviceKey, deviceName });
-    } else if (address) {
+    } else if (host) {
       this.foreground.clear();
       this.mcs.setMerge({ activeDeviceKey: deviceKey, optimisticDeviceName: deviceName });
 
-      this.connectDevice.connectOtherDevice({ address, deviceKey });
+      this.connectDevice.connectOtherDevice({ host, deviceKey });
     } else {
-      const localDeviceState = this.mcs.localDeviceStore.get();
+      const localDeviceState = this.mcs.localConnector.state.get();
       const { nearbyDevices } = localDeviceState;
 
       const matchingDevice = nearbyDevices.find(
@@ -33,14 +33,12 @@ class SwitchDevice extends Emitter {
       );
 
       if (matchingDevice) {
-        const { deviceKey, deviceName, ip: address } = matchingDevice;
-        this.switch({ address, deviceKey, deviceName });
+        const { deviceKey, deviceName, ip: host } = matchingDevice;
+        this.switch({ host, deviceKey, deviceName });
       } else {
         this.emit('connect_to_device_key_failed');
-        this.switchState(localDeviceState.device);
+        this.switchState(localDeviceState.device); // assumes device in state!
       }
     }
   }
 }
-
-export default SwitchDevice;

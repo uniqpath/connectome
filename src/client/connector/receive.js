@@ -86,8 +86,8 @@ function wireReceive({ jsonData, encryptedData, rawMessage, wasEncrypted, connec
           connector.emit('receive_diff', jsonData.diff);
         } else if (jsonData.signal) {
           connector.emit(jsonData.signal, jsonData.data);
-        } else if (jsonData.shape) {
-          connector.emit('receive_shape', jsonData.shape);
+        } else if (jsonData.stateField) {
+          connector.emit('receive_state_field', jsonData.stateField);
         } else {
           connector.emit('receive', { jsonData, rawMessage: decodedMessage });
         }
