@@ -10,10 +10,9 @@ import SwitchDevice from './helpers/switchDevice.js';
 class MultiConnectedStore extends MergeStore {
   constructor({
     endpoint,
-    address,
+    host,
     port,
     protocol,
-    lane,
     keypair = newKeypair(),
     connectToDeviceKey,
     logStore,
@@ -29,15 +28,17 @@ class MultiConnectedStore extends MergeStore {
     this.publicKey = publicKey;
     this.privateKey = privateKey;
 
+    // used when connecting each device ... passed into connect function
+    this.keypair = keypair;
+
     this.port = port;
     this.protocol = protocol;
-    this.lane = lane;
 
     this.logStore = logStore;
     this.rpcRequestTimeout = rpcRequestTimeout;
     this.verbose = verbose;
 
-    this.stores = {};
+    this.connectors = {};
 
     this.connected = new WritableStore(); // is currently active store connected ?
 
@@ -51,14 +52,13 @@ class MultiConnectedStore extends MergeStore {
       this.emit('connect_to_device_key_failed');
     });
 
-    this.localDeviceStore = connectDevice.connectThisDevice({ address });
-
-    this.locallyConnected = this.localDeviceStore.connected;
+    // use from the outside as part of api as well, see dmt-mobile app
+    this.localConnector = connectDevice.connectThisDevice({ host });
   }
 
   signal(signal, data) {
-    if (this.activeStore()) {
-      this.activeStore().signal(signal, data);
+    if (this.activeConnector()) {
+      this.activeConnector().signal(signal, data);
     } else {
       console.log(
         `MCS: Error emitting remote signal ${signal} / ${data}. Debug info: activeDeviceKey=${this.activeDeviceKey()}`
@@ -67,12 +67,12 @@ class MultiConnectedStore extends MergeStore {
   }
 
   signalLocalDevice(signal, data) {
-    this.localDeviceStore.signal(signal, data);
+    this.localConnector.signal(signal, data);
   }
 
   remoteObject(objectName) {
-    if (this.activeStore()) {
-      return this.activeStore().remoteObject(objectName);
+    if (this.activeConnector()) {
+      return this.activeConnector().remoteObject(objectName);
     }
 
     console.log(
@@ -81,17 +81,17 @@ class MultiConnectedStore extends MergeStore {
   }
 
   // only for other devices
-  preconnect({ address, deviceKey }) {
-    this.connectDevice.connectOtherDevice({ address, deviceKey });
+  preconnect({ host, deviceKey }) {
+    this.connectDevice.connectOtherDevice({ host, deviceKey });
   }
 
-  switch({ address, deviceKey, deviceName }) {
-    this.switchDevice.switch({ address, deviceKey, deviceName });
+  switch({ host, deviceKey, deviceName }) {
+    this.switchDevice.switch({ host, deviceKey, deviceName });
   }
 
-  activeStore() {
+  activeConnector() {
     if (this.activeDeviceKey()) {
-      return this.stores[this.activeDeviceKey()];
+      return this.connectors[this.activeDeviceKey()];
     }
   }
 

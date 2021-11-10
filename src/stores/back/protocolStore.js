@@ -4,21 +4,30 @@ import clone from './lib/clone.js';
 
 import getDiff from './lib/getDiff.js';
 
-class MirroringStore extends EventEmitter {
-  constructor(initialState = {}) {
+export default class ProtocolStore extends EventEmitter {
+  constructor(initialState = {}, { latent = false } = {}) {
     super();
+
+    this.latent = latent;
 
     this.state = initialState;
     this.lastAnnouncedState = clone(initialState);
   }
 
-  mirror(channelList) {
+  syncOver(channelList) {
     channelList.on('new_channel', channel => {
-      channel.send({ state: this.lastAnnouncedState });
+      if (!this.latent) {
+        channel.send({ state: this.lastAnnouncedState });
+      }
     });
 
     this.on('diff', diff => {
-      channelList.sendAll({ diff });
+      if (this.latent) {
+        this.latent = false;
+        channelList.sendAll({ state: this.state });
+      } else {
+        channelList.sendAll({ diff });
+      }
     });
   }
 
@@ -52,5 +61,3 @@ class MirroringStore extends EventEmitter {
     }
   }
 }
-
-export default MirroringStore;

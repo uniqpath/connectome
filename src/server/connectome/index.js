@@ -8,11 +8,13 @@ import { orderBy } from '../../utils/sorting/sorting.js';
 
 import ChannelList from '../channel/channelList.js';
 
-class ConnectionsAcceptor extends ReadableStore {
-  constructor({ port, keypair, server, verbose }) {
+import { newKeypair } from '../../utils/crypto/index.js';
+
+export default class Connectome extends ReadableStore {
+  constructor({ port, keypair = newKeypair(), server, verbose }) {
     super({ connectionList: [] });
 
-    this.port = port;
+    this.port = port
     this.keypair = keypair;
 
     this.server = server;
@@ -22,24 +24,20 @@ class ConnectionsAcceptor extends ReadableStore {
     this.protocols = {};
   }
 
-  registerProtocol({ protocol, lane, onConnect }) {
+  registerProtocol({ protocol, onConnect = () => {} }) {
     if (this.wsServer) {
       throw new Error('registerProtocol: Please add all protocols before starting the ws server.');
     }
 
-    this.emit('protocol_added', { protocol, lane });
+    this.emit('protocol_added', { protocol });
 
     if (!this.protocols[protocol]) {
-      this.protocols[protocol] = {};
-    }
-
-    if (!this.protocols[protocol][lane]) {
-      const channelList = new ChannelList({ protocol, lane });
-      this.protocols[protocol][lane] = { onConnect, channelList };
+      const channelList = new ChannelList({ protocol });
+      this.protocols[protocol] = { onConnect, channelList };
       return channelList;
     }
 
-    throw new Error(`Protocol lane ${protocol}/${lane} already exists`);
+    throw new Error(`Protocol ${protocol} already exists`);
   }
 
   start() {
@@ -85,16 +83,12 @@ class ConnectionsAcceptor extends ReadableStore {
   }
 
   registeredProtocols() {
-    return Object.entries(this.protocols).map(([protocol, lanes]) => {
-      return { protocol, lanes: Object.keys(lanes) };
-    });
+    return Object.keys(this.protocols);
   }
 
   connectionList() {
     const list = this.wsServer.enumerateConnections().reverse();
-    const order = orderBy('protocol', 'lane');
+    const order = orderBy('protocol');
     return list.sort(order);
   }
 }
-
-export default ConnectionsAcceptor;

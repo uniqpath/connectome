@@ -25,14 +25,16 @@ class WsServer extends EventEmitter {
     super();
 
     process.nextTick(() => {
-      const handleProtocols = (protocols, request) => {
-        return protocols[0];
-      };
+      // const handleProtocols = (protocols, request) => {
+      //   return protocols[0];
+      // };
 
       if (server) {
-        this.webSocketServer = new WebSocket.Server({ server, handleProtocols });
+        this.webSocketServer = new WebSocket.Server({ server });
+        //this.webSocketServer = new WebSocket.Server({ server, handleProtocols });
       } else {
-        this.webSocketServer = new WebSocket.Server({ port, handleProtocols });
+        this.webSocketServer = new WebSocket.Server({ port });
+        //this.webSocketServer = new WebSocket.Server({ port, handleProtocols });
       }
 
       this.continueSetup({ verbose });
@@ -91,8 +93,8 @@ class WsServer extends EventEmitter {
     this.webSocketServer.clients.forEach(ws => {
       list.push({
         address: ws._connectomeChannel.remoteAddress() || ws._connectomeChannel.remoteIp(),
-        protocol: ws.protocol,
-        lane: ws._connectomeChannel.lane,
+        //protocol: ws.protocol,
+        protocol: ws._connectomeChannel.protocol,
         remotePubkeyHex: ws._connectomeChannel.remotePubkeyHex(),
         operational: ws._connectomeChannel.isReady({ warn: false }), // 💡 connected and agreed on shared key .. so far only used in informative cli `dmt connections` list, otherwise we never have to check for this in our distributed systems logic
         //💡 informative-nature only, not used for distributed system logic
