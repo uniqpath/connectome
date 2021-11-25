@@ -25,7 +25,8 @@
     "./stores": {
       "import": "./stores/index.mjs",
       "require": "./stores/index.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",
