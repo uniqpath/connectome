@@ -14,8 +14,8 @@ class ConnectorPool extends ReadableStore {
     this.isPreparingConnector = {};
   }
 
-  getConnector({ host, port, tag }) {
-    const hostWithPort = `${host}:${port}`;
+  getConnector({ endpoint, host, port, tag }) {
+    const hostWithPort = endpoint || `${host}:${port}`;
 
     if (!host || !port) {
       throw new Error(`Must provide both host and port: ${hostWithPort}`);
@@ -34,7 +34,7 @@ class ConnectorPool extends ReadableStore {
       } else {
         this.isPreparingConnector[hostWithPort] = true;
 
-        firstConnectWaitAndContinue({ ...this.options, ...{ host, port, tag } }).then(connector => {
+        firstConnectWaitAndContinue({ ...this.options, ...{ endpoint, host, port, tag } }).then(connector => {
           this.connectors[hostWithPort] = connector;
           this.isPreparingConnector[hostWithPort] = false;
 
