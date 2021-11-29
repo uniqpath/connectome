@@ -26,6 +26,7 @@
       "import": "./stores/index.mjs",
       "require": "./stores/index.js"
     },
+    "./typings": "./typings",
     "./package.json": "./package.json"
   },
   "files": [
