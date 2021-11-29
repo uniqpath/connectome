@@ -14,7 +14,7 @@ export default class Connectome extends ReadableStore {
   constructor({ port, keypair = newKeypair(), server, verbose }) {
     super({ connectionList: [] });
 
-    this.port = port;
+    this.port = port
     this.keypair = keypair;
 
     this.server = server;

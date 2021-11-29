@@ -16,12 +16,18 @@ export default function determineEndpoint({ endpoint, host, port }) {
 
       endpoint = `${wsProtocol}://${host}`;
 
-      if (port) {
+      // new addition
+      if (wsProtocol == 'wss') { // if wss from browser we forget all about the port and use /ws which has to be upgraded to websocket connection by our reverse-proxy
+        // read this as well, very informative :: https://medium.com/intrinsic-blog/why-should-i-use-a-reverse-proxy-if-node-js-is-production-ready-5a079408b2ca
+        endpoint = `${wsProtocol}://${host}/ws`;
+      } else if (port) {
         endpoint = `${endpoint}:${port}`;
       } else if (window.location.port) {
         endpoint = `${endpoint}:${window.location.port}`;
       }
-    } else { // node.js ... if wss is needed, then full endpoint has to be passed in instead of host and port
+    } else {
+      // node.js ... if wss is needed, then full endpoint has to be passed in instead of host and port
+      // endpoint is then used "as is with no modifications" and this entire block of code is not needed
       endpoint = `ws://${host || 'localhost'}:${port}`;
     }
   }
