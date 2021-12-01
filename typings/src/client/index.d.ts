@@ -11,7 +11,7 @@ export class ConnectorPool extends ReadableStore {
     address: string;
     protocol: string;
     remotePubkeyHex: string;
-    operational: any;
+    ready: any;
     readyState: any;
     connectedAt: number;
     lastMessageAt: number;
