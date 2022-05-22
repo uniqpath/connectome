@@ -1,8 +1,7 @@
 import colors from 'chalk';
 
+import { newServerKeypair, Connectome } from '../../../src/server';
 import { printServerInfo } from '../exampleUtils.js';
-
-import { newServerKeypair, ConnectionsAcceptor } from '../../../src/server';
 import { bufferToHex } from '../../../src/utils/index.js';
 
 import onConnect from './serverEndpoint.js';
@@ -18,16 +17,16 @@ const protocol = 'test';
 
 const verbose = false;
 
-const acceptor = new ConnectionsAcceptor({ port, keypair, verbose });
+const connectome = new Connectome({ port, keypair, verbose });
 
-acceptor.registerProtocol({ protocol, onConnect });
+connectome.registerProtocol({ protocol, onConnect });
 
-acceptor.on('connection', channel => {
+connectome.on('connection', channel => {
   console.log(colors.magenta(`Initiated new connection with shared secret ${colors.gray(bufferToHex(channel.sharedSecret))}`));
 });
 
-acceptor.on('connection_closed', channel => {
+connectome.on('connection_closed', channel => {
   console.log(`Connection ${colors.gray(bufferToHex(channel.sharedSecret))} closed`);
 });
 
-acceptor.start();
+connectome.start();

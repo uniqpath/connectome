@@ -1,4 +1,4 @@
-import colors from 'colors';
+import colors from 'chalk';
 
 function serverEndpoint({ channel }) {
   channel.on('a b c', () => {

@@ -1,4 +1,4 @@
-import colors from 'colors';
+import colors from 'chalk';
 
 import { printClientInfo } from '../exampleUtils.js';
 

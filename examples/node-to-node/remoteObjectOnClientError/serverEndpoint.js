@@ -1,4 +1,4 @@
-import colors from 'colors';
+import colors from 'chalk';
 
 function serverEndpoint({ channel }) {
   const object = colors.green('ErrorObject::makeError');
