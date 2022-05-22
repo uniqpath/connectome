@@ -8,10 +8,13 @@ import Slot from './slot';
 
 import getDiff from './lib/getDiff.js';
 
+import removeVolatileElements from './removeVolatileElements';
+import muteAnnounce from './muteAnnounce';
+
 // WARNING: initialState can mess with loaded state!
 // example:
 //
-// new SlottedStore({ messages: [] })
+// new SyncStore({ messages: [] })
 //
 // this won't have the intented consequences because this state will override
 // any messages loaded from the file... use carefuly!
@@ -23,16 +26,12 @@ import getDiff from './lib/getDiff.js';
 //
 // store.slot('notifications').makeArray().pushToArray(data);
 
-export default class SlottedStore extends EventEmitter {
-  constructor(
-    initialState = {},
-    { loadState = null, saveState = null, omitStateFn = x => x, removeStateChangeFalseTriggers = x => x } = {}
-  ) {
+export default class SyncStore extends EventEmitter {
+  constructor(initialState = {}, { loadState = null, saveState = null, omitStateFn = x => x } = {}) {
     super();
 
     this.omitStateFn = omitStateFn;
     this.saveState = saveState;
-    this.removeStateChangeFalseTriggers = removeStateChangeFalseTriggers;
 
     //this.lastAnnouncedState = clone(initialState); // alternative to below...
 
@@ -43,7 +42,7 @@ export default class SlottedStore extends EventEmitter {
       const persistedState = loadState();
 
       if (persistedState) {
-        this.kvStore.update(persistedState);
+        this.kvStore.update(removeVolatileElements(this.slots, persistedState)); // we do remove volatile elements just in case although they shouldn't have been saved in the first place... but sometimes when schema is changing they can be
       }
     }
 
@@ -56,7 +55,7 @@ export default class SlottedStore extends EventEmitter {
     this.subscriptions = [];
   }
 
-  syncOver(channelList) {
+  sync(channelList) {
     this.channelList = channelList;
 
     channelList.on('new_channel', channel => {
@@ -73,6 +72,12 @@ export default class SlottedStore extends EventEmitter {
   state() {
     return this.kvStore.state;
   }
+
+  // dangerous :)
+  // we replace the entire state across all slots
+  // set(state) {
+  //   this.kvStore.set(state);
+  // }
 
   get(key) {
     return key ? this.state()[key] : this.state();
@@ -101,9 +106,12 @@ export default class SlottedStore extends EventEmitter {
 
   save() {
     if (this.saveState) {
-      this.lastSavedState =
-        this.saveState({ state: clone(this.state()), lastSavedState: this.lastSavedState }) ||
-        this.lastSavedState;
+      const state = removeVolatileElements(this.slots, clone(this.state()));
+      const savedState = this.saveState({ state, lastSavedState: this.lastSavedState });
+
+      if (savedState) {
+        this.lastSavedState = savedState;
+      }
     }
   }
 
@@ -120,9 +128,10 @@ export default class SlottedStore extends EventEmitter {
       return;
     }
 
-    const diff = getDiff(this.lastAnnouncedState, this.removeStateChangeFalseTriggers(remoteState));
+    const diff = getDiff(this.lastAnnouncedState, muteAnnounce(this.slots, remoteState));
 
     if (diff) {
+      // console.log(diff);
       //this.emit('diff', diff)
       this.sendRemote({ diff });
       this.stateChangesCount += 1;

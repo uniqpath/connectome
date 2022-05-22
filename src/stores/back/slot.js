@@ -11,6 +11,25 @@ export default class Slot {
     return this;
   }
 
+  // doesn't get saved
+  makeVolatile(callback) {
+    this.volatile = true;
+    this.volatileCallback = callback;
+  }
+
+  isVolatile() {
+    return this.volatile;
+  }
+
+  muteAnnounce(callback) {
+    this._muteAnnounce = true;
+    this.muteAnnounceCallback = callback;
+  }
+
+  mutesAnnounce() {
+    return this._muteAnnounce;
+  }
+
   get() {
     return this.parent.get(this.name) || {};
   }

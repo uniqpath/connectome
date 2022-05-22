@@ -55,7 +55,7 @@ import { connect } from 'connectome';
 const connector = connect(); // will connect to the origin server
 ```
 
-If we are serving the website from `https` then we just have to enable the proxied endpoint at `/ws` in similar way:
+If we are serving the website from `https` then we just have to enable the proxied endpoint at `/ws` :
 
 ```
 $HTTP["url"] =~ "^/ws" {

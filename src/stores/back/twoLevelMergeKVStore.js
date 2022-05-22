@@ -5,6 +5,11 @@ export default class KeyValueStore {
     this.state = {};
   }
 
+  // dangerous :)
+  // set(state) {
+  //   this.state = state;
+  // }
+
   update(patch) {
     this.state = mergeState(this.state, patch);
   }
