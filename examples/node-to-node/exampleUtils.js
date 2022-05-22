@@ -1,4 +1,4 @@
-import colors from 'colors';
+import colors from 'chalk';
 
 function printClientInfo({ privateKeyHex, publicKeyHex }) {
   console.log(colors.magenta('🛰️  connector (= connection initiator) created 🛰️'));

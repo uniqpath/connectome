@@ -1,4 +1,4 @@
-import colors from 'colors';
+import colors from 'chalk';
 
 import { newServerKeypair, ConnectionsAcceptor } from '../../../src/server';
 import { printServerInfo } from '../exampleUtils.js';

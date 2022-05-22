@@ -1,4 +1,4 @@
-const colors = require('colors');
+const colors = require('chalk');
 const { newKeypair } = require('./crypto/index.js');
 const { stores } = require('./stores/index.js');
 const { ConnectionsAcceptor } = require('./server/index.js');
