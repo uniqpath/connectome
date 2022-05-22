@@ -1,6 +1,6 @@
 import { EventEmitter } from '../../utils/index.js';
 
-import ProtocolStore from '../../stores/back/protocolStore';
+//import ProtocolStore from '../../stores/back/protocolStore';
 
 class ChannelList extends EventEmitter {
   constructor({ protocol }) {
@@ -10,10 +10,10 @@ class ChannelList extends EventEmitter {
 
     this.channels = [];
 
-    // latent means that it won't send anything over the channels until we first use it (set the state)
-    // this allows for outside stores to mirror into channel list which default ProtocolStore (channels.state) remains unused
-    this.state = new ProtocolStore({}, { latent: true });
-    this.state.syncOver(this);
+    // // latent means that it won't send anything over the channels until we first use it (set the state)
+    // // this allows for outside stores to mirror into channel list which default ProtocolStore (channels.state) remains unused
+    // this.state = new ProtocolStore({}, { latent: true });
+    // this.state.sync(this);
 
     process.nextTick(() => {
       this.reportStatus();

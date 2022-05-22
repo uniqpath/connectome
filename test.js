@@ -33,7 +33,7 @@ function start({ port }) {
     onConnect: ({ channel }) => onConnect({ channel, store })
   });
 
-  store.syncOver(channels);
+  store.sync(channels);
 
   // start websocket server
   acceptor.start();
