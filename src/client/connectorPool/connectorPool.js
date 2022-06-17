@@ -2,7 +2,7 @@ import firstConnectWaitAndContinue from '../connect/firstConnectWaitAndContinue.
 
 import { orderBy } from '../../utils/sorting/sorting.js';
 
-import ReadableStore from '../../stores/front/helperStores/readableStore.js';
+import ReadableStore from '../../stores/lib/helperStores/readableStore.js';
 
 class ConnectorPool extends ReadableStore {
   constructor(options) {

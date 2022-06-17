@@ -32,11 +32,24 @@ export default class KeyValueStore {
     delete this.state[baseKey][key];
   }
 
-  pushToArray(baseKey, value) {
+  push(baseKey, value) {
     this.state[baseKey].push(value);
   }
 
-  removeFromArray(baseKey, removePredicate) {
+  updateArray(baseKey, selectorPredicate, value) {
+    let hasUpdated;
+
+    for (const entry of this.state[baseKey].filter(entry => selectorPredicate(entry))) {
+      // in-place replace entry completely (array reference stays the same)
+      //Object.keys(entry).forEach(key => delete entry[key]);
+      Object.assign(entry, value);
+      hasUpdated = true;
+    }
+
+    return hasUpdated;
+  }
+
+  removeArrayElements(baseKey, removePredicate) {
     this.state[baseKey] = this.state[baseKey].filter(entry => !removePredicate(entry));
   }
 
@@ -46,17 +59,6 @@ export default class KeyValueStore {
     if (entry) {
       // in-place replace entry completely (array reference stays the same)
       Object.keys(entry).forEach(key => delete entry[key]);
-      Object.assign(entry, value);
-      return true;
-    }
-  }
-
-  updateArrayElement(baseKey, selectorPredicate, value) {
-    const entry = this.state[baseKey].find(entry => selectorPredicate(entry));
-
-    if (entry) {
-      // in-place replace entry completely (array reference stays the same)
-      //Object.keys(entry).forEach(key => delete entry[key]);
       Object.assign(entry, value);
       return true;
     }

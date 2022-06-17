@@ -1,12 +1,7 @@
-// front
-import MultiConnectedStore from './front/multiConnectedStore/multiConnectedStore.js';
-import LogStore from './front/logStore/logStore.js';
-
-// back
-import SyncStore from './back/syncStore.js';
+import MultiConnectedStore from './lib/multiConnectedStore/multiConnectedStore.js';
+import LogStore from './lib/logStore/logStore.js';
 
 export {
   MultiConnectedStore,
-  LogStore,
-  SyncStore
+  LogStore
 };

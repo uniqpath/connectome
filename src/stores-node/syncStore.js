@@ -1,4 +1,4 @@
-import { EventEmitter } from '../../utils/index.js';
+import { EventEmitter } from '../utils/index.js';
 
 import clone from './lib/clone.js';
 
@@ -8,8 +8,12 @@ import Slot from './slot';
 
 import getDiff from './lib/getDiff.js';
 
-import removeVolatileElements from './removeVolatileElements';
+import removeUnsaved from './removeUnsaved';
 import muteAnnounce from './muteAnnounce';
+
+import { saveState, loadState } from './statePersist';
+//const saveState = () => {};
+//const loadState = () => {};
 
 // WARNING: initialState can mess with loaded state!
 // example:
@@ -24,25 +28,39 @@ import muteAnnounce from './muteAnnounce';
 
 // Do this instead:
 //
-// store.slot('notifications').makeArray().pushToArray(data);
+// store.slot('notifications').makeArray().push(data);
 
 export default class SyncStore extends EventEmitter {
-  constructor(initialState = {}, { loadState = null, saveState = null, omitStateFn = x => x } = {}) {
+  constructor(
+    initialState = {},
+    {
+      stateFilePath,
+      unsavedSlots = [],
+      beforeLoadAndSave = state => state,
+      schemaVersion,
+      schemaMigrations = [],
+      noRecovery = false,
+      omitStateFn = state => state
+    } = {}
+  ) {
     super();
 
+    this.stateFilePath = stateFilePath;
+    this.unsavedSlots = unsavedSlots;
+    this.beforeLoadAndSave = beforeLoadAndSave;
+    this.schemaVersion = schemaVersion;
     this.omitStateFn = omitStateFn;
-    this.saveState = saveState;
 
     //this.lastAnnouncedState = clone(initialState); // alternative to below...
 
     this.slots = {};
     this.kvStore = new KeyValueStore();
 
-    if (loadState) {
-      const persistedState = loadState();
+    if (this.stateFilePath) {
+      const persistedState = loadState({ schemaVersion, stateFilePath, schemaMigrations, noRecovery });
 
       if (persistedState) {
-        this.kvStore.update(removeVolatileElements(this.slots, persistedState)); // we do remove volatile elements just in case although they shouldn't have been saved in the first place... but sometimes when schema is changing they can be
+        this.kvStore.update(removeUnsaved(persistedState, unsavedSlots, beforeLoadAndSave)); // we do remove volatile elements just in case although they shouldn't have been saved in the first place... but sometimes when schema is changing they can be
       }
     }
 
@@ -89,6 +107,10 @@ export default class SyncStore extends EventEmitter {
 
   /* State update functions */
 
+  key(name) {
+    return this.slot(name);
+  }
+
   slot(name) {
     if (!this.slots[name]) {
       this.slots[name] = new Slot({ name, parent: this });
@@ -105,9 +127,14 @@ export default class SyncStore extends EventEmitter {
   /* end State update functions */
 
   save() {
-    if (this.saveState) {
-      const state = removeVolatileElements(this.slots, clone(this.state()));
-      const savedState = this.saveState({ state, lastSavedState: this.lastSavedState });
+    if (this.stateFilePath) {
+      const state = removeUnsaved(clone(this.state()), this.unsavedSlots, this.beforeLoadAndSave);
+      const savedState = saveState({
+        stateFilePath: this.stateFilePath,
+        schemaVersion: this.schemaVersion,
+        state,
+        lastSavedState: this.lastSavedState
+      });
 
       if (savedState) {
         this.lastSavedState = savedState;
