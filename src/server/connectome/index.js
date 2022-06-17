@@ -2,7 +2,7 @@
 import WsServer from './wsServer.js';
 import initializeConnection from './initializeConnection.js';
 
-import ReadableStore from '../../stores/front/helperStores/readableStore.js';
+import ReadableStore from '../../stores/lib/helperStores/readableStore.js';
 
 import { orderBy } from '../../utils/sorting/sorting.js';
 

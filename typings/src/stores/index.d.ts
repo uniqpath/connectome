@@ -141,8 +141,8 @@ declare class KeyValueStore {
   clearBaseKey(baseKey: any): void;
   replaceSubKey({ baseKey, key, value }: { baseKey: any; key: any; value: any }): void;
   removeSubKey({ baseKey, key }: { baseKey: any; key: any }): void;
-  pushToArray(baseKey: any, value: any): void;
-  removeFromArray(baseKey: any, removePredicate: any): void;
+  push(baseKey: any, value: any): void;
+  removeArrayElements(baseKey: any, removePredicate: any): void;
   replaceArrayElement(baseKey: any, selectorPredicate: any, value: any): boolean;
-  updateArrayElement(baseKey: any, selectorPredicate: any, value: any): boolean;
+  updateArray(baseKey: any, selectorPredicate: any, value: any): boolean;
 }

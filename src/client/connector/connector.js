@@ -5,7 +5,7 @@ nacl.util = naclutil;
 import send from './send.js';
 import receive from './receive.js';
 
-import WritableStore from '../../stores/front/helperStores/writableStore.js';
+import WritableStore from '../../stores/lib/helperStores/writableStore.js';
 
 import { EventEmitter, listify, hexToBuffer, bufferToHex } from '../../utils/index.js';
 
@@ -131,7 +131,13 @@ class Connector extends EventEmitter {
           this.ready = true;
           this.connectedAt = Date.now();
 
-
+          // new trick so that any state has time to get populated
+          // this.connectedTimeout = setTimeout(() => {
+          //   this.connected.set(true);
+          // }, 100);
+          // WHAT ABOUT this from dmt-connect ?
+          // {#if !$connected || Object.keys($state).length <= 0}
+          //   <Loading />
           this.connected.set(true);
 
           this.emit('ready', { sharedSecret, sharedSecretHex });

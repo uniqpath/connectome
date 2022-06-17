@@ -58,6 +58,7 @@ export default [
     ]
   },
   {
+    // browser stores
     input: 'src/stores/index.js',
     plugins: [nodeResolve({ preferBuiltins: false, browser: true }), commonjs()],
     output: [
@@ -68,6 +69,23 @@ export default [
       {
         format: 'cjs',
         file: 'stores/index.js'
+      }
+    ],
+    onwarn
+  },
+  {
+    // node stores
+    input: 'src/stores-node/index.js',
+    external: builtinModules,
+    plugins: [nodeResolve({ preferBuiltins: true }), commonjs()],
+    output: [
+      {
+        format: 'esm',
+        file: 'stores/node/index.mjs'
+      },
+      {
+        format: 'cjs',
+        file: 'stores/node/index.js'
       }
     ],
     onwarn

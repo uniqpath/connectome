@@ -7,7 +7,7 @@ import RpcClient from '../../client/rpc/client.js';
 
 import RPCTarget from '../../client/rpc/RPCTarget.js';
 
-import WritableStore from '../../stores/front/helperStores/writableStore.js';
+import WritableStore from '../../stores/lib/helperStores/writableStore.js';
 
 class Channel extends EventEmitter {
   constructor(ws, { rpcRequestTimeout, verbose = false }) {
