@@ -11,19 +11,6 @@ export default class Slot {
     return this;
   }
 
-  // // doesn't get saved
-  // makeVolatile(callback) {
-  //   this.volatile = true;
-  //   this.volatileCallback = callback;
-
-  //   // "tv nearvy devices problem -- loading old state"
-  //   //this.remove({ announce: false }); // should we announce ?
-  // }
-
-  // isVolatile() {
-  //   return this.volatile;
-  // }
-
   muteAnnounce(callback) {
     this._muteAnnounce = true;
     this.muteAnnounceCallback = callback;
