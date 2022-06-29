@@ -49,6 +49,7 @@
   "dependencies": {
     "bufferutil": "^4.0.2",
     "fast-json-patch": "^3.0.0-1",
+    "kleur": "^4.1.5",
     "quantum-generator": "^1.9.1",
     "rfc6902": "^4.0.1",
     "tweetnacl": "^1.0.3",

@@ -1,3 +1,5 @@
+//import colors from 'kleur';
+
 import nacl from 'tweetnacl';
 import naclutil from 'tweetnacl-util';
 nacl.util = naclutil;
@@ -9,13 +11,27 @@ function isRpcCallResult(jsonData) {
 }
 
 function wireReceive({ jsonData, encryptedData, rawMessage, wasEncrypted, connector }) {
+  const { log } = connector;
+
+  // const log = (...opts) => {
+  //   if (opts.length == 0) {
+  //     connector.log();
+  //   } else {
+  //     connector.log(
+  //       colors.yellow('📥'),
+  //       colors.gray(connector.tag || connector.endpoint),
+  //       colors.yellow(...opts)
+  //     );
+  //   }
+  // };
+
   connector.lastMessageAt = Date.now();
 
   const nonce = new Uint8Array(integerToByteArray(2 * connector.receivedCount + 1, 24));
 
   if (connector.verbose && !wasEncrypted) {
-    console.log();
-    console.log(`Connector → Received message #${connector.receivedCount} @ ${connector.address}:`);
+    log();
+    log(`Connector → Received message #${connector.receivedCount}:`);
   }
 
   // 💡 unencrypted jsonData !
@@ -23,8 +39,8 @@ function wireReceive({ jsonData, encryptedData, rawMessage, wasEncrypted, connec
     if (jsonData.jsonrpc) {
       if (isRpcCallResult(jsonData)) {
         if (connector.verbose && !wasEncrypted) {
-          console.log('Received plain-text rpc result');
-          console.log(jsonData);
+          log('Received plain-text rpc result');
+          log(jsonData);
         }
 
         connector.rpcClient.jsonrpcMsgReceive(rawMessage);
@@ -37,9 +53,9 @@ function wireReceive({ jsonData, encryptedData, rawMessage, wasEncrypted, connec
   } else if (encryptedData) {
     // 💡 encryptedJson data!!
     if (connector.verbose == 'extra') {
-      console.log('Received bytes:');
-      console.log(encryptedData);
-      console.log(`Decrypting with shared secret ${connector.sharedSecret}...`);
+      log('Received bytes:');
+      log(encryptedData);
+      log(`Decrypting with shared secret ${connector.sharedSecret}...`);
     }
 
     const _decryptedMessage = nacl.secretbox.open(encryptedData, nonce, connector.sharedSecret);
@@ -51,7 +67,7 @@ function wireReceive({ jsonData, encryptedData, rawMessage, wasEncrypted, connec
       const decodedMessage = nacl.util.encodeUTF8(decryptedMessage);
 
       // if (connector.verbose) {
-      //   console.log(`Received message: ${decodedMessage}`);
+      //   log(`Received message: ${decodedMessage}`);
       // }
 
       try {
@@ -60,8 +76,8 @@ function wireReceive({ jsonData, encryptedData, rawMessage, wasEncrypted, connec
         // 💡 rpc
         if (jsonData.jsonrpc) {
           if (connector.verbose) {
-            console.log('Received and decrypted rpc result:');
-            console.log(jsonData);
+            log('Received and decrypted rpc result:');
+            log(jsonData);
           }
 
           wireReceive({ jsonData, rawMessage: decodedMessage, wasEncrypted: true, connector });
@@ -92,8 +108,8 @@ function wireReceive({ jsonData, encryptedData, rawMessage, wasEncrypted, connec
           connector.emit('receive', { jsonData, rawMessage: decodedMessage });
         }
       } catch (e) {
-        console.log("Couldn't parse json message although the flag was for string ...");
-        console.log(decodedMessage);
+        log("Couldn't parse json message although the flag was for string ...");
+        log(decodedMessage);
         throw e;
       }
     } else {

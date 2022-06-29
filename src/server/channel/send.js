@@ -6,6 +6,8 @@ import { isObject, addHeader } from './sendHelpers.js';
 import { integerToByteArray } from '../../utils/index.js';
 
 function send({ message, channel }) {
+  const { log } = channel;
+
   if (isObject(message)) {
     message = JSON.stringify(message);
   }
@@ -14,12 +16,12 @@ function send({ message, channel }) {
 
   if (channel.verbose) {
     if (channel.sharedSecret) {
-      console.log(`Channel → Sending encrypted message #${channel.sentCount} @ ${channel.remoteAddress()}:`);
+      log(`Channel → Sending encrypted message #${channel.sentCount} @ ${channel.remoteAddress()}:`);
     } else {
-      console.log(`Channel → Sending message #${channel.sentCount} @ ${channel.remoteAddress()}:`);
+      log(`Channel → Sending message #${channel.sentCount} @ ${channel.remoteAddress()}:`);
     }
 
-    console.log(message);
+    log(message);
   }
 
   if (channel.sharedSecret) {
@@ -36,13 +38,13 @@ function send({ message, channel }) {
     message = encryptedMessage;
 
     if (channel.verbose == 'extra') {
-      console.log('Encrypted bytes:');
-      console.log(encryptedMessage);
+      log('Encrypted bytes:');
+      log(encryptedMessage);
     }
   }
 
   if (channel.verbose) {
-    console.log();
+    log();
   }
 
   if (!channel.ws.terminated && channel.ws.readyState == channel.ws.OPEN) {

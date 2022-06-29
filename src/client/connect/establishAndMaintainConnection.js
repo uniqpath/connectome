@@ -22,6 +22,7 @@ function establishAndMaintainConnection(
     keypair,
     verbose,
     tag,
+    log,
     dummy
   });
 

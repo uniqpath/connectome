@@ -21,7 +21,7 @@ function heartbeat() {
 // });
 
 class WsServer extends EventEmitter {
-  constructor({ port, server, verbose }) {
+  constructor({ port, server, log = console.log, verbose }) {
     super();
 
     process.nextTick(() => {
@@ -37,13 +37,13 @@ class WsServer extends EventEmitter {
         //this.webSocketServer = new WebSocket.Server({ port, handleProtocols });
       }
 
-      this.continueSetup({ verbose });
+      this.continueSetup({ log, verbose });
     });
   }
 
-  continueSetup({ verbose }) {
+  continueSetup({ log, verbose }) {
     this.webSocketServer.on('connection', (ws, req) => {
-      const channel = new Channel(ws, { verbose });
+      const channel = new Channel(ws, { log, verbose });
 
       channel._remoteIp = getRemoteIp(req);
       channel._remoteAddress = getRemoteHost(req);
