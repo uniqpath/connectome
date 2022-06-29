@@ -88,6 +88,31 @@ class Connector extends EventEmitter {
     }
   }
 
+  // pre-check for edge cases
+  on(eventName, handler) {
+    if (eventName == 'ready') {
+      // latecomer !! for example via connectorPool.getConnector
+      // connector might be ready or not ..
+      // with earlier approach we might have missed on ready event because we are attaching handler like this:
+      //
+      // connectorPool.getConnector({ endpoint, host: address, port, deviceTag }).then(connector => {
+      //   connector.on('ready', () => {
+      //     onReconnect({ connector, slotName, program, selectorPredicate });
+      //   });
+      // ...
+
+      if (this.isReady()) {
+        // connector already ready at time of attaching on ready event,
+        // we have missed the event, now simulate the event so that
+        // calling code handler is executed and client is aware of correct status
+        handler(); // we call on('ready', () => { ... }) handler manually for attached code that missed the event
+      }
+    }
+
+    // attach real handler
+    super.on(eventName, handler);
+  }
+
   // just used in connectome examples for now, no real use in api
   getSharedSecret() {
     return this.sharedSecret ? bufferToHex(this.sharedSecret) : undefined;
