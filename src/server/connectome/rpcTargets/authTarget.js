@@ -28,6 +28,7 @@ export default class AuthTarget extends EventEmitter {
 
   finalizeHandshake({ protocol }) {
     const { server, channel } = this;
+
     channel.setSharedSecret(this.sharedSecret);
     channel.setProtocol(protocol);
 
@@ -35,7 +36,7 @@ export default class AuthTarget extends EventEmitter {
       server.emit('connection', channel);
     } else {
       const error = `Error: request from ${channel.remoteIp()} (${channel.remotePubkeyHex()}) - unknown protocol ${protocol}, disconnecting in 60s`;
-      console.log(error);
+      this.channel.log(error);
 
       setTimeout(() => {
         channel.terminate();

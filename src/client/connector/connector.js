@@ -1,3 +1,5 @@
+//import colors from 'kleur';
+
 import nacl from 'tweetnacl';
 import naclutil from 'tweetnacl-util';
 nacl.util = naclutil;
@@ -25,11 +27,13 @@ class Connector extends EventEmitter {
     rpcRequestTimeout,
     verbose = false,
     tag,
+    log = console.log,
     dummy
   } = {}) {
     super();
 
     this.protocol = protocol;
+    this.log = log;
 
     const { privateKey: clientPrivateKey, publicKey: clientPublicKey } = acceptKeypair(keypair);
 
@@ -77,23 +81,22 @@ class Connector extends EventEmitter {
 
   signal(signal, data) {
     if (this.connected.get()) {
-      //console.log(`Sending signal '${signal}' over connector ${this.endpoint}`);
+      //log(`Sending signal '${signal}' over connector ${this.endpoint}`);
       this.send({ signal, data });
     } else {
-      console.log(
-        'Warning: trying to send signal over disconnected connector, this should be prevented by GUI'
-      );
+      this.log('Warning: trying to send signal over disconnected connector, this should be prevented by GUI');
     }
+  }
+
+  // just used in connectome examples for now, no real use in api
+  getSharedSecret() {
+    return this.sharedSecret ? bufferToHex(this.sharedSecret) : undefined;
   }
 
   wireReceive({ jsonData, encryptedData, rawMessage }) {
     receive({ jsonData, encryptedData, rawMessage, connector: this });
     this.receivedCount += 1;
   }
-
-  // state() {
-  //   return this.state;
-  // }
 
   field(name) {
     return this.connectionState.get(name);
@@ -127,9 +130,10 @@ class Connector extends EventEmitter {
         clientPublicKey: this.clientPublicKey,
         protocol: this.protocol
       })
-        .then(({ sharedSecret, sharedSecretHex }) => {
-          this.ready = true;
+        //.then(({ sharedSecret, sharedSecretHex }) => {
+        .then(() => {
           this.connectedAt = Date.now();
+          this.connected.set(true);
 
           // new trick so that any state has time to get populated
           // this.connectedTimeout = setTimeout(() => {
@@ -138,14 +142,15 @@ class Connector extends EventEmitter {
           // WHAT ABOUT this from dmt-connect ?
           // {#if !$connected || Object.keys($state).length <= 0}
           //   <Loading />
-          this.connected.set(true);
 
-          this.emit('ready', { sharedSecret, sharedSecretHex });
+          this.ready = true;
+
+          this.emit('ready');
         })
         .catch(e => {
           if (num == this.successfulConnectsCount) {
-            console.log(e);
-            console.log('dropping connection and retrying again');
+            this.log(e);
+            this.log('dropping connection and retrying');
             this.connection.terminate();
           }
         });
@@ -158,13 +163,15 @@ class Connector extends EventEmitter {
 
       if (this.transportConnected == undefined) {
         const tag = this.tag ? ` (${this.tag})` : '';
-        console.log(
+        this.log(
           `Connector ${this.endpoint}${tag} was not able to connect at first try, setting READY to false`
         );
       }
 
       this.transportConnected = false;
       this.ready = false;
+      this.sharedSecret = undefined; // could also stay but less confusion if we clear it
+
       delete this.connectedAt;
 
       if (isDisconnect) {
@@ -193,35 +200,38 @@ class Connector extends EventEmitter {
         .call('exchangePubkeys', { pubkey: this.clientPublicKeyHex })
         .then(remotePubkeyHex => {
           const sharedSecret = nacl.box.before(hexToBuffer(remotePubkeyHex), clientPrivateKey);
-          const sharedSecretHex = bufferToHex(sharedSecret);
+
+          //const sharedSecretHex = bufferToHex(sharedSecret);
           this.sharedSecret = sharedSecret;
 
           this._remotePubkeyHex = remotePubkeyHex;
 
           if (this.verbose) {
-            console.log('Established shared secret through diffie-hellman exchange:');
-            console.log(sharedSecretHex);
+            this.log(
+              `Connector ${this.endpoint}: Established shared secret through diffie-hellman exchange:`
+            );
+            //this.log(sharedSecretHex);
           }
 
           this.remoteObject('Auth')
             .call('finalizeHandshake', { protocol })
             .then(res => {
               if (res && res.error) {
-                console.log(`x Protocol ${this.protocol} error:`);
-                console.log(res.error);
+                this.log(`x Protocol ${this.protocol} error:`);
+                this.log(res.error);
               } else {
-                success({ sharedSecret, sharedSecretHex });
+                //success({ sharedSecret, sharedSecretHex });
+                success();
 
-                //console.log(`✓ Lane ${this.lane} negotiated `);
+                //this.log(`✓ Lane ${this.lane} negotiated `);
                 const tag = this.tag ? ` (${this.tag})` : '';
-                console.log(
+                this.log(
                   `✓ Protocol [ ${this.protocol || '"no-name"'} ] connection [ ${this.endpoint}${tag} ] ready`
                 );
               }
             })
             .catch(e => {
-              console.log(`x Protocol ${this.protocol} finalizeHandshake error:`);
-              console.log(e);
+              this.log(`x Protocol ${this.protocol} finalizeHandshake error:`);
               reject(e);
             });
         })

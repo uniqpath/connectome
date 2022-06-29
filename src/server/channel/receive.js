@@ -5,15 +5,23 @@ nacl.util = naclutil;
 import { integerToByteArray } from '../../utils/index.js';
 
 function handleMessage(channel, message) {
+  const { log } = channel;
+
   let jsonData;
 
+  // we implemented this because all messages should be json
+  // but there was a bug when we sent some message before connection ready
+  // and message snuck in just before the last step (finalizeHandshake
+  // process expected unencrypted data but message was received
+  // just as finalize handshake was executing and it was already encrypted since this.sharedSecret was set in
+  // connector diffieHellman immediately after return from exchangePubkeys
   try {
     jsonData = JSON.parse(message);
   } catch (e) {
-    console.log('Error: Message should be json !');
-    console.log(message);
-    console.log('---');
-    return;
+    log('Error: Message should be json !');
+    log(message);
+    log(message.toString());
+    throw e; // let program crash
   }
 
   if (jsonData.jsonrpc) {
@@ -34,19 +42,21 @@ function handleMessage(channel, message) {
 }
 
 function messageReceived({ message, channel }) {
+  const { log } = channel;
+
   channel.lastMessageAt = Date.now();
 
   const nonce = new Uint8Array(integerToByteArray(2 * channel.receivedCount, 24));
 
   if (channel.verbose) {
-    console.log(`Channel → Received message #${channel.receivedCount} @ ${channel.remoteAddress()}:`);
+    log(`Channel → Received message #${channel.receivedCount} @ ${channel.remoteAddress()}:`);
   }
 
   //if (channel.sharedSecret) {
   // if (channel.sharedSecret && channel.verbose == 'extra') {
-  //   console.log('Received bytes:');
-  //   console.log(message);
-  //   console.log(`Decrypting with shared secret ${channel.sharedSecret}...`);
+  //   log('Received bytes:');
+  //   log(message);
+  //   log(`Decrypting with shared secret ${channel.sharedSecret}...`);
   // }
 
   try {
@@ -63,6 +73,10 @@ function messageReceived({ message, channel }) {
     const flag = _decryptedMessage[0];
     const decryptedMessage = _decryptedMessage.subarray(1);
 
+    if (channel.verbose) {
+      log(`decryptedMessage: ${decryptedMessage}`);
+    }
+
     // text (json)
     if (flag == 1) {
       const decodedMessage = nacl.util.encodeUTF8(decryptedMessage);
@@ -71,15 +85,15 @@ function messageReceived({ message, channel }) {
       // todo: channel.sharedSecret will never be true here... move/ dduplicate
       // if (channel.verbose) {
       //   if (channel.sharedSecret) {
-      //     console.log('Decrypted message:');
+      //     log('Decrypted message:');
       //   }
 
-      //   console.log(message);
-      //   console.log();
+      //   log(message);
+      //   log();
       // }
 
       if (channel.verbose) {
-        console.log(`Message: ${decodedMessage}`);
+        log(`Message: ${decodedMessage}`);
       }
 
       handleMessage(channel, decodedMessage);

@@ -1,4 +1,3 @@
-import colors from './colors/colors.js';
 import stopwatch from './stopwatch/stopwatch.js';
 import EventEmitter from './emitter/index.js';
 
@@ -41,7 +40,6 @@ function integerToByteArray(long, arrayLen = 8) {
 }
 
 export {
-  colors,
   stopwatch,
   EventEmitter,
   isBrowser,
