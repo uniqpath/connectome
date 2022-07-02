@@ -51,16 +51,16 @@ export default class Slot {
     this.parent.announceStateChange(announce);
   }
 
-  updateArray(selectorPredicate, value, { announce = true } = {}) {
-    const foundMatches = this.parent.kvStore.updateArray(this.name, selectorPredicate, value);
+  updateArrayElements(selectorPredicate, value, { announce = true } = {}) {
+    const foundMatches = this.parent.kvStore.updateArrayElements(this.name, selectorPredicate, value);
     if (foundMatches) {
       this.parent.announceStateChange(announce);
     }
   }
 
   removeArrayElements(selectorPredicate, { announce = true } = {}) {
-    this.parent.kvStore.removeArrayElements(this.name, selectorPredicate);
-    this.parent.announceStateChange(announce);
+    const removed = this.parent.kvStore.removeArrayElements(this.name, selectorPredicate);
+    this.parent.announceStateChange(removed && announce);
   }
 
   replaceArrayElement(selectorPredicate, value, { announce = true } = {}) {
@@ -69,5 +69,16 @@ export default class Slot {
       this.parent.announceStateChange(announce);
       return true;
     }
+  }
+
+  setArrayElement(selectorPredicate, value, { announce = true } = {}) {
+    if (!this.replaceArrayElement(selectorPredicate, value, { announce })) {
+      this.push(value, { announce });
+    }
+  }
+
+  sortArray(compareFn, { announce = true }) {
+    this.parent.kvStore.sortArray(this.name, compareFn);
+    this.parent.announceStateChange(announce);
   }
 }
