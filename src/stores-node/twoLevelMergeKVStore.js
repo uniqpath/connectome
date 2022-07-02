@@ -36,7 +36,7 @@ export default class KeyValueStore {
     this.state[baseKey].push(value);
   }
 
-  updateArray(baseKey, selectorPredicate, value) {
+  updateArrayElements(baseKey, selectorPredicate, value) {
     let hasUpdated;
 
     for (const entry of this.state[baseKey].filter(entry => selectorPredicate(entry))) {
@@ -49,8 +49,11 @@ export default class KeyValueStore {
     return hasUpdated;
   }
 
+  // return true if anything was removed
   removeArrayElements(baseKey, removePredicate) {
+    const prevLength = this.state[baseKey].length;
     this.state[baseKey] = this.state[baseKey].filter(entry => !removePredicate(entry));
+    return prevLength != this.state[baseKey].length;
   }
 
   replaceArrayElement(baseKey, selectorPredicate, value) {
@@ -62,5 +65,9 @@ export default class KeyValueStore {
       Object.assign(entry, value);
       return true;
     }
+  }
+
+  sortArray(baseKey, compareFn) {
+    this.state[baseKey].sort(compareFn);
   }
 }
