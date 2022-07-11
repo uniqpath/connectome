@@ -7,14 +7,16 @@ nacl.util = naclutil;
 import { isObject, addHeader } from '../../server/channel/sendHelpers.js';
 import { integerToByteArray } from '../../utils/index.js';
 
+import logger from '../../utils/logger/logger.js';
+
 function send({ data, connector }) {
   const { log } = connector;
 
   // const log = (...opts) => {
   //   if (opts.length == 0) {
-  //     connector.log();
+  //     connector.logger.write(log);
   //   } else {
-  //     connector.log(
+  //     connector.logger.write(log,
   //       colors.magenta('📡'),
   //       colors.gray(connector.tag || connector.endpoint),
   //       colors.magenta(...opts)
@@ -42,23 +44,29 @@ function send({ data, connector }) {
       const encryptedMessage = nacl.secretbox(encodedMessage, nonce, connector.sharedSecret);
 
       if (connector.verbose) {
-        log();
-        log(`Connector → Sending encrypted message #${connector.sentCount} @ ${connector.address}:`);
-        log(data);
+        logger.write(log); // empty line
+        logger.green(
+          log,
+          `Connector ${connector.remoteAddress()} → Sending encrypted message #${connector.sentCount} ↴`
+        );
+        logger.gray(log, data);
       }
 
       connector.connection.websocket.send(encryptedMessage);
     } else {
       if (connector.verbose) {
-        log();
-        log(`Connector → Sending message #${connector.sentCount} @ ${connector.address}:`);
-        log(data);
+        logger.write(log); // empty line
+        logger.green(
+          log,
+          `Connector ${connector.remoteAddress()} → Sending message #${connector.sentCount} ↴`
+        );
+        logger.gray(log, data);
       }
 
       connector.connection.websocket.send(data);
     }
   } else {
-    log(`⚠️ Warning: "${data}" was not sent because connector is not ready`);
+    logger.red(log, `⚠️ Warning: "${data}" was not sent because connector is not ready`);
   }
 }
 

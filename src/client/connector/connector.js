@@ -8,6 +8,7 @@ import send from './send.js';
 import receive from './receive.js';
 
 import WritableStore from '../../stores/lib/helperStores/writableStore.js';
+import logger from '../../utils/logger/logger.js';
 
 import { EventEmitter, listify, hexToBuffer, bufferToHex } from '../../utils/index.js';
 
@@ -72,6 +73,11 @@ class Connector extends EventEmitter {
         this.connected.set(false);
       }
     }, 700); // formerly 300ms
+
+    if (verbose) {
+      logger.cyan(this.log, `Connector ${this.remoteAddress()} instantiated`);
+      //logger.write(this.log, );
+    }
   }
 
   send(data) {
@@ -84,7 +90,10 @@ class Connector extends EventEmitter {
       //log(`Sending signal '${signal}' over connector ${this.endpoint}`);
       this.send({ signal, data });
     } else {
-      this.log('Warning: trying to send signal over disconnected connector, this should be prevented by GUI');
+      logger.write(
+        this.log,
+        'Warning: trying to send signal over disconnected connector, this should be prevented by GUI'
+      );
     }
   }
 
@@ -150,6 +159,10 @@ class Connector extends EventEmitter {
 
       const num = this.successfulConnectsCount;
 
+      if (this.verbose) {
+        logger.write(this.log, `✓ Connector ${this.remoteAddress()} websocket connected`);
+      }
+
       this.diffieHellman({
         clientPrivateKey: this.clientPrivateKey,
         clientPublicKey: this.clientPublicKey,
@@ -174,8 +187,8 @@ class Connector extends EventEmitter {
         })
         .catch(e => {
           if (num == this.successfulConnectsCount) {
-            this.log(e);
-            this.log('dropping connection and retrying');
+            logger.write(this.log, e);
+            logger.write(this.log, 'dropping connection and retrying');
             this.connection.terminate();
           }
         });
@@ -188,7 +201,8 @@ class Connector extends EventEmitter {
 
       if (this.transportConnected == undefined) {
         const tag = this.tag ? ` (${this.tag})` : '';
-        this.log(
+        logger.write(
+          this.log,
           `Connector ${this.endpoint}${tag} was not able to connect at first try, setting READY to false`
         );
       }
@@ -232,31 +246,33 @@ class Connector extends EventEmitter {
           this._remotePubkeyHex = remotePubkeyHex;
 
           if (this.verbose) {
-            this.log(
-              `Connector ${this.endpoint}: Established shared secret through diffie-hellman exchange:`
+            logger.write(
+              this.log,
+              `Connector ${this.endpoint}: Established shared secret through diffie-hellman exchange.`
             );
-            //this.log(sharedSecretHex);
+            //logger.write(this.log, sharedSecretHex);
           }
 
           this.remoteObject('Auth')
             .call('finalizeHandshake', { protocol })
             .then(res => {
               if (res && res.error) {
-                this.log(`x Protocol ${this.protocol} error:`);
-                this.log(res.error);
+                logger.write(this.log, `x Protocol ${this.protocol} error:`);
+                logger.write(this.log, res.error);
               } else {
                 //success({ sharedSecret, sharedSecretHex });
                 success();
 
-                //this.log(`✓ Lane ${this.lane} negotiated `);
+                //logger.write(this.log, `✓ Lane ${this.lane} negotiated `);
                 const tag = this.tag ? ` (${this.tag})` : '';
-                this.log(
+                logger.cyan(
+                  this.log,
                   `✓ Protocol [ ${this.protocol || '"no-name"'} ] connection [ ${this.endpoint}${tag} ] ready`
                 );
               }
             })
             .catch(e => {
-              this.log(`x Protocol ${this.protocol} finalizeHandshake error:`);
+              logger.write(this.log, `x Protocol ${this.protocol} finalizeHandshake error:`);
               reject(e);
             });
         })

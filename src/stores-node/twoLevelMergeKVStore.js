@@ -29,7 +29,9 @@ export default class KeyValueStore {
 
   removeSubKey({ baseKey, key }) {
     this.state[baseKey] = this.state[baseKey] || {};
+    const found = this.state[baseKey][key] != undefined;
     delete this.state[baseKey][key];
+    return found;
   }
 
   push(baseKey, value) {
