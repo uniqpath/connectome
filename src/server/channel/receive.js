@@ -4,6 +4,8 @@ nacl.util = naclutil;
 
 import { integerToByteArray } from '../../utils/index.js';
 
+import logger from '../../utils/logger/logger.js';
+
 function handleMessage(channel, message) {
   const { log } = channel;
 
@@ -18,9 +20,9 @@ function handleMessage(channel, message) {
   try {
     jsonData = JSON.parse(message);
   } catch (e) {
-    log('Error: Message should be json !');
-    log(message);
-    log(message.toString());
+    logger.red(log, 'Error: Message should be json !');
+    logger.red(log, message);
+    logger.red(log, message.toString());
     throw e; // let program crash
   }
 
@@ -49,14 +51,14 @@ function messageReceived({ message, channel }) {
   const nonce = new Uint8Array(integerToByteArray(2 * channel.receivedCount, 24));
 
   if (channel.verbose) {
-    log(`Channel → Received message #${channel.receivedCount} @ ${channel.remoteAddress()}:`);
+    logger.write(log, `Channel ${channel.remoteAddress()} → Received message #${channel.receivedCount} @ ${channel.remoteAddress()} ↴`);
   }
 
   //if (channel.sharedSecret) {
   // if (channel.sharedSecret && channel.verbose == 'extra') {
-  //   log('Received bytes:');
-  //   log(message);
-  //   log(`Decrypting with shared secret ${channel.sharedSecret}...`);
+  //   logger.write(log, 'Received bytes:');
+  //   logger.write(log, message);
+  //   logger.write(log, `Decrypting with shared secret ${channel.sharedSecret}...`);
   // }
 
   try {
@@ -74,7 +76,7 @@ function messageReceived({ message, channel }) {
     const decryptedMessage = _decryptedMessage.subarray(1);
 
     if (channel.verbose) {
-      log(`decryptedMessage: ${decryptedMessage}`);
+      logger.write(log, `decryptedMessage: ${decryptedMessage}`);
     }
 
     // text (json)
@@ -85,15 +87,15 @@ function messageReceived({ message, channel }) {
       // todo: channel.sharedSecret will never be true here... move/ dduplicate
       // if (channel.verbose) {
       //   if (channel.sharedSecret) {
-      //     log('Decrypted message:');
+      //     logger.write(log, 'Decrypted message:');
       //   }
 
-      //   log(message);
-      //   log();
+      //   logger.write(log, message);
+      //   logger.write(log, );
       // }
 
       if (channel.verbose) {
-        log(`Message: ${decodedMessage}`);
+        logger.write(log, `Message: ${decodedMessage}`);
       }
 
       handleMessage(channel, decodedMessage);

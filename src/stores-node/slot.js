@@ -42,7 +42,15 @@ export default class Slot {
   }
 
   removeKey(key, { announce = true } = {}) {
-    this.parent.kvStore.removeSubKey({ baseKey: this.name, key });
+    if (this.parent.kvStore.removeSubKey({ baseKey: this.name, key })) {
+      this.parent.announceStateChange(announce);
+    }
+  }
+
+  removeKeys(keys, { announce = true } = {}) {
+    for (const key of keys) {
+      this.parent.kvStore.removeSubKey({ baseKey: this.name, key });
+    }
     this.parent.announceStateChange(announce);
   }
 

@@ -5,12 +5,31 @@ import initializeProtocol from '../initializeProtocol.js';
 
 import { EventEmitter, hexToBuffer } from '../../../utils/index.js';
 
+import logger from '../../../utils/logger/logger.js';
+
 nacl.util = naclutil;
 
+const DAY = 24 * 60 * 60 * 1000;
+
+// common among all instances of AuthTarget
 const _errorReportTimestamps = {};
 const _errorReportCounters = {};
 
-const DAY = 24 * 60 * 60 * 1000;
+//cleanup --⚠️ it should be and it is just one global setInterval
+// if we have a lot connections from different IPs and our processes are really long running, then this
+// data structure may grow unbounded.. probably not a really pressing problem but we still play it nice
+// and free up the memory because it is the right thing to do
+setInterval(() => {
+  const now = Date.now();
+
+  for (const [remoteIp, timestamp] of Object.entries(_errorReportTimestamps)) {
+    if (now - timestamp > 2 * DAY) {
+      // remove processes that are no longer reconnecting in last 2 days
+      delete _errorReportTimestamps[remoteIp];
+      delete _errorReportCounters[remoteIp];
+    }
+  }
+}, DAY); // cleanup data structure every day
 
 export default class AuthTarget extends EventEmitter {
   constructor({ keypair, channel, server }) {
@@ -19,22 +38,6 @@ export default class AuthTarget extends EventEmitter {
     this.keypair = keypair;
     this.channel = channel;
     this.server = server;
-
-    //cleanup
-    // if we have a lot connections from different IPs and our processes are really long running, then this
-    // data structure may grow unbounded.. probably not a really pressing problem but we still play it nice
-    // and free up the memory because it is the right thing to do
-    setInterval(() => {
-      const now = Date.now();
-
-      for (const [remoteIp, timestamp] of Object.entries(_errorReportTimestamps)) {
-        if (now - timestamp > 2 * DAY) {
-          // remove processes that are no longer reconnecting in last 2 days
-          delete _errorReportTimestamps[remoteIp];
-          delete _errorReportCounters[remoteIp];
-        }
-      }
-    }, DAY); // cleanup data structure every day
   }
 
   exchangePubkeys({ pubkey }) {
@@ -53,6 +56,8 @@ export default class AuthTarget extends EventEmitter {
     channel.setSharedSecret(this.sharedSecret);
     channel.setProtocol(protocol);
 
+    const { log } = this.channel;
+
     // in the future if remote process doesn't have the correct allowance (public key), we also let it hang
     // as we do now with missing or incorrect dmt protocol
 
@@ -68,13 +73,15 @@ export default class AuthTarget extends EventEmitter {
         !_errorReportTimestamps[channel.remoteIp()] ||
         Date.now() - _errorReportTimestamps[channel.remoteIp()] > DAY
       ) {
-        this.channel.log(error);
+        logger.yellow(log, error);
 
-        this.channel.log(
+        logger.yellow(
+          log,
           'Maybe it is a stray or unwelcome dmt-proc which will keep reconnecting until terminated... we report at most once per 24h per remote ip'
         );
 
-        this.channel.log(
+        logger.yellow(
+          log,
           `Reconnect tries since this dmt-proc started: ${_errorReportCounters[channel.remoteIp()]}`
         );
 

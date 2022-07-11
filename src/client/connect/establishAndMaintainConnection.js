@@ -8,10 +8,12 @@ const wsCLOSED = 3;
 import Connector from '../connector/connector.js';
 import determineEndpoint from './determineEndpoint.js';
 
+import logger from '../../utils/logger/logger.js';
+
 //todo: remove 'dummy' argument once legacyLib with old MCS is history
 function establishAndMaintainConnection(
-  { endpoint, host, port, protocol, keypair, remotePubkey, rpcRequestTimeout, verbose, tag, dummy },
-  { WebSocket, log }
+  { endpoint, host, port, protocol, keypair, remotePubkey, rpcRequestTimeout, log, verbose, tag, dummy },
+  { WebSocket }
 ) {
   endpoint = determineEndpoint({ endpoint, host, port });
 
@@ -41,12 +43,12 @@ function establishAndMaintainConnection(
     checkTicker: 0
   };
 
-  setTimeout(() => tryReconnect({ connector, endpoint }, { WebSocket, log }), 10);
+  setTimeout(() => tryReconnect({ connector, endpoint }, { WebSocket, log, verbose }), 10);
 
   const connectionCheckInterval = 1500;
   const callback = () => {
     if (!connector.decommissioned) {
-      checkConnection({ connector, endpoint }, { WebSocket, log });
+      checkConnection({ connector, endpoint }, { WebSocket, log, verbose });
       setTimeout(callback, connectionCheckInterval);
     }
   };
@@ -58,16 +60,18 @@ function establishAndMaintainConnection(
 
 export default establishAndMaintainConnection;
 
-function checkConnection({ connector, endpoint }, { WebSocket, log }) {
+function checkConnection({ connector, endpoint }, { WebSocket, log, verbose }) {
   const conn = connector.connection;
 
-  if (connectionIdle(conn) || connector.decommissioned) {
+  if (verbose && (connectionIdle(conn) || connector.decommissioned)) {
     if (connectionIdle(conn)) {
-      log(
+      logger.yellow(
+        log,
         `Connection ${connector.connection.endpoint} became idle, closing websocket ${conn.websocket.rand}`
       );
     } else {
-      log(
+      logger.yellow(
+        log,
         `Connection ${connector.connection.endpoint} decommisioned, closing websocket ${conn.websocket.rand}, will not retry again `
       );
     }
@@ -81,17 +85,17 @@ function checkConnection({ connector, endpoint }, { WebSocket, log }) {
     conn.websocket.send('ping');
   } else {
     if (connector.connected == undefined) {
-      log(`Setting connector status to FALSE because connector.connected is undefined`);
+      logger.write(log, `Setting connector status to FALSE because connector.connected is undefined`);
       connector.connectStatus(false);
     }
 
-    tryReconnect({ connector, endpoint }, { WebSocket, log });
+    tryReconnect({ connector, endpoint }, { WebSocket, log, verbose });
   }
 
   conn.checkTicker += 1;
 }
 
-function tryReconnect({ connector, endpoint }, { WebSocket, log }) {
+function tryReconnect({ connector, endpoint }, { WebSocket, log, verbose }) {
   const conn = connector.connection;
 
   if (conn.currentlyTryingWS && conn.currentlyTryingWS.readyState == wsCONNECTING) {
@@ -108,11 +112,11 @@ function tryReconnect({ connector, endpoint }, { WebSocket, log }) {
   // added this so that it shows in frontend log in dmt-gui..
   // "native" console errors like
   // establishAndMaintainConnection.js:104 WebSocket connection to 'ws://192.168.0.64:7780/' failed: ...
-  // are not visible since we need to use our own log() function
+  // are not visible since we need to use our own logger.write(log, ) function
   // MEH: this didn't work on Chromium on RPi !!
   // ws.onerror = error => {
-  //   //console.log(error);
-  //   log(`error (connecting?) websocket: ${ws.rand} to ${conn.endpoint}`);
+  //   //console.logger.write(log, error);
+  //   logger.write(log, `error (connecting?) websocket: ${ws.rand} to ${conn.endpoint}`);
   // };
 
   conn.currentlyTryingWS = ws;
@@ -120,7 +124,7 @@ function tryReconnect({ connector, endpoint }, { WebSocket, log }) {
 
   ws.rand = Math.random();
 
-  //log(`created new websocket: ${ws.rand} to ${conn.endpoint}`);
+  //logger.write(log, `created new websocket: ${ws.rand} to ${conn.endpoint}`);
 
   if (browser) {
     ws.binaryType = 'arraybuffer';
@@ -131,9 +135,13 @@ function tryReconnect({ connector, endpoint }, { WebSocket, log }) {
   }
 
   const openCallback = m => {
+    if (verbose) {
+      logger.write(log, `websocket ${endpoint} connection opened (${ws.rand})`);
+    }
+
     conn.currentlyTryingWS = null;
     conn.checkTicker = 0;
-    addSocketListeners({ ws, connector, openCallback }, { log });
+    addSocketListeners({ ws, connector, openCallback }, { log, verbose });
     conn.websocket = ws;
     connector.connectStatus(true);
   };
@@ -149,15 +157,19 @@ function tryReconnect({ connector, endpoint }, { WebSocket, log }) {
   }
 }
 
-function addSocketListeners({ ws, connector, openCallback }, { log }) {
+function addSocketListeners({ ws, connector, openCallback }, { log, verbose }) {
   const conn = connector.connection;
 
   const errorCallback = m => {
-    log(`websocket ${ws.rand} conn ${connector.connection.endpoint} error`);
-    log(m);
+    logger.write(log, `websocket ${ws.rand} conn ${connector.connection.endpoint} error`);
+    logger.write(log, m);
   };
 
   const closeCallback = m => {
+    if (verbose) {
+      logger.write(log, `websocket ${connector.connection.endpoint} connection closed (${ws.rand})`);
+    }
+
     connector.connectStatus(false);
   };
 
@@ -208,5 +220,5 @@ function socketConnected(conn) {
 }
 
 function connectionIdle(conn) {
-  return socketConnected(conn) && conn.checkTicker > 5;
+  return socketConnected(conn) && conn.checkTicker > 2; // CHANGE TO 2 !! it was 5 for long time
 }
