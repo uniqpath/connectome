@@ -1,4 +1,4 @@
-import firstConnectWaitAndContinue from '../connect/firstConnectWaitAndContinue.js';
+import connect from '../connect/connectNode.js';
 
 import { orderBy } from '../../utils/sorting/sorting.js';
 
@@ -22,28 +22,36 @@ class ConnectorPool extends ReadableStore {
     }
 
     return new Promise((success, reject) => {
-      if (this.connectors[hostWithPort]) {
-        success(this.connectors[hostWithPort]);
-        return;
+      if (!this.connectors[hostWithPort]) {
+        const connector = connect({ ...this.options, ...{ endpoint, host, port, tag } });
+        this.connectors[hostWithPort] = connector;
+        this.setupConnectorReactivity(connector);
       }
 
-      if (this.isPreparingConnector[hostWithPort]) {
-        setTimeout(() => {
-          this.getConnector({ host, port, tag }).then(success);
-        }, 10);
-      } else {
-        this.isPreparingConnector[hostWithPort] = true;
+      success(this.connectors[hostWithPort]);
 
-        firstConnectWaitAndContinue({ ...this.options, ...{ endpoint, host, port, tag } }).then(connector => {
-          this.connectors[hostWithPort] = connector;
-          this.isPreparingConnector[hostWithPort] = false;
+      // if (this.connectors[hostWithPort]) {
+      //   success(this.connectors[hostWithPort]);
+      //   return;
+      // }
 
-          // part of reactive outgoingConnections feature :: ConnectorPool as reactive (Readable)Store
-          this.setupConnectorReactivity(connector);
+      // if (this.isPreparingConnector[hostWithPort]) {
+      //   setTimeout(() => {
+      //     this.getConnector({ host, port, tag }).then(success);
+      //   }, 10);
+      // } else {
+      //   this.isPreparingConnector[hostWithPort] = true;
 
-          success(connector);
-        });
-      }
+      //   firstConnectWaitAndContinue({ ...this.options, ...{ endpoint, host, port, tag } }).then(connector => {
+      //     this.connectors[hostWithPort] = connector;
+      //     this.isPreparingConnector[hostWithPort] = false;
+
+      //     // part of reactive outgoingConnections feature :: ConnectorPool as reactive (Readable)Store
+      //     this.setupConnectorReactivity(connector);
+
+      //     success(connector);
+      //   });
+      // }
     });
   }
 

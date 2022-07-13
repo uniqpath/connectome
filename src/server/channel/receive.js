@@ -51,7 +51,7 @@ function messageReceived({ message, channel }) {
   const nonce = new Uint8Array(integerToByteArray(2 * channel.receivedCount, 24));
 
   if (channel.verbose) {
-    logger.write(log, `Channel ${channel.remoteAddress()} → Received message #${channel.receivedCount} @ ${channel.remoteAddress()} ↴`);
+    logger.write(log, `Channel ${channel.remoteAddress()} → Received message #${channel.receivedCount} ↴`);
   }
 
   //if (channel.sharedSecret) {
@@ -77,6 +77,7 @@ function messageReceived({ message, channel }) {
 
     if (channel.verbose) {
       logger.write(log, `decryptedMessage: ${decryptedMessage}`);
+      //logger.write(log, `decryptedMessage length: ${decryptedMessage.length}`);
     }
 
     // text (json)
@@ -96,6 +97,7 @@ function messageReceived({ message, channel }) {
 
       if (channel.verbose) {
         logger.write(log, `Message: ${decodedMessage}`);
+        //logger.write(log, `Message length: ${decodedMessage.length}`);
       }
 
       handleMessage(channel, decodedMessage);
