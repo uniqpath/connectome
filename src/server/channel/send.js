@@ -20,20 +20,14 @@ function send({ message, channel }) {
     if (channel.sharedSecret) {
       logger.write(
         log,
-        `Channel ${channel.remoteAddress()} → Sending encrypted message #${
-          channel.sentCount
-        } @ ${channel.remoteAddress()}:`
+        `Channel ${channel.remoteAddress()} → Sending encrypted message #${channel.sentCount}:`
       );
     } else {
-      logger.write(
-        log,
-        `Channel ${channel.remoteAddress()} → Sending message #${
-          channel.sentCount
-        } @ ${channel.remoteAddress()}:`
-      );
+      logger.write(log, `Channel ${channel.remoteAddress()} → Sending message #${channel.sentCount}:`);
     }
 
     logger.write(log, message);
+    //logger.write(log, message.length);
   }
 
   if (channel.sharedSecret) {

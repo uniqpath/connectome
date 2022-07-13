@@ -45,7 +45,8 @@ function establishAndMaintainConnection(
 
   setTimeout(() => tryReconnect({ connector, endpoint }, { WebSocket, log, verbose }), 10);
 
-  const connectionCheckInterval = 1500;
+  const connectionCheckInterval = 1000;
+
   const callback = () => {
     if (!connector.decommissioned) {
       checkConnection({ connector, endpoint }, { WebSocket, log, verbose });
@@ -81,6 +82,7 @@ function checkConnection({ connector, endpoint }, { WebSocket, log, verbose }) {
   }
 
   const connected = socketConnected(conn);
+
   if (connected) {
     conn.websocket.send('ping');
   } else {
