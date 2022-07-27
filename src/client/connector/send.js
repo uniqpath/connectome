@@ -44,7 +44,7 @@ function send({ data, connector }) {
       const encryptedMessage = nacl.secretbox(encodedMessage, nonce, connector.sharedSecret);
 
       if (connector.verbose) {
-        logger.write(log); // empty line
+        //logger.write(log); // empty line
         logger.green(
           log,
           `Connector ${connector.remoteAddress()} → Sending encrypted message #${connector.sentCount} ↴`
@@ -55,7 +55,7 @@ function send({ data, connector }) {
       connector.connection.websocket.send(encryptedMessage);
     } else {
       if (connector.verbose) {
-        logger.write(log); // empty line
+        //logger.write(log); // empty line
         logger.green(
           log,
           `Connector ${connector.remoteAddress()} → Sending message #${connector.sentCount} ↴`

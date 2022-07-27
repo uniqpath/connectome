@@ -155,7 +155,12 @@ export default class SyncStore extends EventEmitter {
       return;
     }
 
+    //const start = stopwatch.start();
+
     const diff = getDiff(this.lastAnnouncedState, muteAnnounce(this.slots, remoteState));
+
+    //const duration = stopwatch.stop(start);
+    //console.log(`Diffing time: ${duration}`);
 
     if (diff) {
       // console.log(diff);
