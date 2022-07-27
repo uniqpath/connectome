@@ -1,18 +1,5 @@
 import { Connector, Eev, Keypair, Options, WritableStore } from '../utils';
 
-export class LogStore extends WritableStore {
-  constructor();
-  addToLog(
-    {
-      origConsoleLog,
-      limit
-    }: {
-      origConsoleLog: any;
-      limit: any;
-    },
-    ...args: any[]
-  ): void;
-}
 export class MultiConnectedStore extends MergeStore {
   constructor({
     endpoint,
@@ -21,12 +8,10 @@ export class MultiConnectedStore extends MergeStore {
     protocol,
     keypair,
     connectToDeviceKey,
-    logStore,
     rpcRequestTimeout,
     verbose
   }: Omit<Options, 'remotePublicKey' | 'dummy' | 'tag'> & {
     connectToDeviceKey?;
-    logStore?: LogStore;
     host?: string;
     port?: number;
   });
@@ -35,7 +20,6 @@ export class MultiConnectedStore extends MergeStore {
   keypair: Keypair;
   port: number;
   protocol: string;
-  logStore: LogStore;
   rpcRequestTimeout: number;
   verbose?: boolean;
   connectors: Record<string, any>;

@@ -29,29 +29,6 @@ class ConnectorPool extends ReadableStore {
       }
 
       success(this.connectors[hostWithPort]);
-
-      // if (this.connectors[hostWithPort]) {
-      //   success(this.connectors[hostWithPort]);
-      //   return;
-      // }
-
-      // if (this.isPreparingConnector[hostWithPort]) {
-      //   setTimeout(() => {
-      //     this.getConnector({ host, port, tag }).then(success);
-      //   }, 10);
-      // } else {
-      //   this.isPreparingConnector[hostWithPort] = true;
-
-      //   firstConnectWaitAndContinue({ ...this.options, ...{ endpoint, host, port, tag } }).then(connector => {
-      //     this.connectors[hostWithPort] = connector;
-      //     this.isPreparingConnector[hostWithPort] = false;
-
-      //     // part of reactive outgoingConnections feature :: ConnectorPool as reactive (Readable)Store
-      //     this.setupConnectorReactivity(connector);
-
-      //     success(connector);
-      //   });
-      // }
     });
   }
 

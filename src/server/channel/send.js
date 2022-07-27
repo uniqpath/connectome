@@ -49,9 +49,9 @@ function send({ message, channel }) {
     }
   }
 
-  if (channel.verbose) {
-    logger.write(log);
-  }
+  // if (channel.verbose) {
+  //   logger.write(log);
+  // }
 
   if (!channel.ws.terminated && channel.ws.readyState == channel.ws.OPEN) {
     channel.ws.send(message);

@@ -7,16 +7,18 @@ import ConnectDevice from './helpers/connectDevice.js';
 import Foreground from './helpers/foreground.js';
 import SwitchDevice from './helpers/switchDevice.js';
 
+//import logger from '../../../utils/logger/logger.js';
+
 class MultiConnectedStore extends MergeStore {
   constructor({
-    endpoint,
+    //endpoint,
     host,
     port,
     protocol,
     keypair = newKeypair(),
     connectToDeviceKey,
-    logStore,
-    rpcRequestTimeout,
+    rpcRequestTimeout = 3000,
+    log,
     verbose
   }) {
     super();
@@ -34,7 +36,7 @@ class MultiConnectedStore extends MergeStore {
     this.port = port;
     this.protocol = protocol;
 
-    this.logStore = logStore;
+    this.log = log;
     this.rpcRequestTimeout = rpcRequestTimeout;
     this.verbose = verbose;
 

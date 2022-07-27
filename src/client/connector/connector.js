@@ -76,7 +76,6 @@ class Connector extends EventEmitter {
 
     if (verbose) {
       logger.cyan(this.log, `Connector ${this.remoteAddress()} instantiated`);
-      //logger.write(this.log, );
     }
   }
 
@@ -87,7 +86,6 @@ class Connector extends EventEmitter {
 
   signal(signal, data) {
     if (this.connected.get()) {
-      //log(`Sending signal '${signal}' over connector ${this.endpoint}`);
       this.send({ signal, data });
     } else {
       logger.write(
@@ -157,38 +155,50 @@ class Connector extends EventEmitter {
 
       this.successfulConnectsCount += 1;
 
-      const num = this.successfulConnectsCount;
-
       if (this.verbose) {
-        logger.write(this.log, `✓ Connector ${this.remoteAddress()} websocket connected`);
+        logger.write(
+          this.log,
+          `✓ Connector ${this.remoteAddress()} websocket connected #${this.successfulConnectsCount}`
+        );
       }
+
+      const websocketId = this.connection.websocket.__id;
 
       this.diffieHellman({
         clientPrivateKey: this.clientPrivateKey,
         clientPublicKey: this.clientPublicKey,
         protocol: this.protocol
       })
-        //.then(({ sharedSecret, sharedSecretHex }) => {
         .then(() => {
           this.connectedAt = Date.now();
           this.connected.set(true);
 
-          // new trick so that any state has time to get populated
-          // this.connectedTimeout = setTimeout(() => {
-          //   this.connected.set(true);
-          // }, 100);
-          // WHAT ABOUT this from dmt-connect ?
-          // {#if !$connected || Object.keys($state).length <= 0}
-          //   <Loading />
-
           this.ready = true;
-
           this.emit('ready');
         })
         .catch(e => {
-          if (num == this.successfulConnectsCount) {
-            logger.write(this.log, e);
-            logger.write(this.log, 'dropping connection and retrying');
+          logger.write(
+            this.log,
+            `x Connector ${this.endpoint} / Protocol ${this.protocol} finalizeHandshake error: ${e.message}`
+          );
+
+          // if there was a timeout error our websocket might have already closed
+          // we only drop the current websocket if it is still open and there was a rpc error,
+          // most likely it was not a timeout but some error on the other end which was passed to us
+          // websocket would stay open but to try and reconnect we have to drop it, otherwise it will be left hanging
+          const wsOPEN = 1;
+          if (
+            this.connection.websocket.__id == websocketId &&
+            this.connection.websocket.readyState == wsOPEN
+          ) {
+            logger.write(
+              this.log,
+              `Connector ${this.endpoint} dropping stale websocket after handshake error`
+            );
+
+            // ⚠️ todo: test with some rpc error (not timeout) .. (not sure how to achieve it)..
+            // and maybe implement a short delay here so that there is no immediate fast infinite reconnect loop
+            // with error thrown, socket terminated, error thrown again etc.
             this.connection.terminate();
           }
         });
@@ -215,7 +225,6 @@ class Connector extends EventEmitter {
 
       if (isDisconnect) {
         this.emit('disconnect');
-        //clearTimeout(this.connectedTimeout);
         this.connected.set(false);
       }
     }
@@ -240,7 +249,6 @@ class Connector extends EventEmitter {
         .then(remotePubkeyHex => {
           const sharedSecret = nacl.box.before(hexToBuffer(remotePubkeyHex), clientPrivateKey);
 
-          //const sharedSecretHex = bufferToHex(sharedSecret);
           this.sharedSecret = sharedSecret;
 
           this._remotePubkeyHex = remotePubkeyHex;
@@ -250,20 +258,16 @@ class Connector extends EventEmitter {
               this.log,
               `Connector ${this.endpoint}: Established shared secret through diffie-hellman exchange.`
             );
-            //logger.write(this.log, sharedSecretHex);
           }
 
           this.remoteObject('Auth')
             .call('finalizeHandshake', { protocol })
             .then(res => {
               if (res && res.error) {
-                logger.write(this.log, `x Protocol ${this.protocol} error:`);
-                logger.write(this.log, res.error);
+                reject(res.error);
               } else {
-                //success({ sharedSecret, sharedSecretHex });
                 success();
 
-                //logger.write(this.log, `✓ Lane ${this.lane} negotiated `);
                 const tag = this.tag ? ` (${this.tag})` : '';
                 logger.cyan(
                   this.log,
@@ -271,10 +275,7 @@ class Connector extends EventEmitter {
                 );
               }
             })
-            .catch(e => {
-              logger.write(this.log, `x Protocol ${this.protocol} finalizeHandshake error:`);
-              reject(e);
-            });
+            .catch(reject); // for example Timeout ... delayed! we have to be careful with closing any connections because new websocket might have already be created, we should not close that one
         })
         .catch(reject);
     });

@@ -61,6 +61,8 @@ function messageReceived({ message, channel }) {
   //   logger.write(log, `Decrypting with shared secret ${channel.sharedSecret}...`);
   // }
 
+  let decodedMessage;
+
   try {
     // handshake phase
     if (!channel.sharedSecret) {
@@ -82,7 +84,8 @@ function messageReceived({ message, channel }) {
 
     // text (json)
     if (flag == 1) {
-      const decodedMessage = nacl.util.encodeUTF8(decryptedMessage);
+      decodedMessage = nacl.util.encodeUTF8(decryptedMessage);
+
       //const jsonData = JSON.parse(decodedMessage);
 
       // todo: channel.sharedSecret will never be true here... move/ dduplicate
@@ -106,7 +109,14 @@ function messageReceived({ message, channel }) {
       channel.emit('receive_binary', decryptedMessage);
     }
   } catch (e) {
-    throw new Error(`${message} -- ${channel.protocol} -- ${e.toString()}`);
+    // we repackage the error so we can include the channel message that triggered the problem
+    throw new Error(
+      `${e.toString()} \n-- Protocol ${
+        channel.protocol
+      } received channel message: ${decodedMessage} \n-- Stacktrace: ${
+        e.stack
+      }\n------ ↑ original stacktrace ------ `
+    );
   }
 }
 

@@ -9,8 +9,8 @@ export default class ConnectDevice {
   }
 
   createConnector({ host }) {
-    const { port, protocol, logStore, rpcRequestTimeout, verbose, keypair } = this.mcs;
-    return connect({ host, port, protocol, keypair, rpcRequestTimeout, verbose });
+    const { port, protocol, rpcRequestTimeout, log, verbose, keypair } = this.mcs;
+    return connect({ host, port, protocol, keypair, rpcRequestTimeout, log, verbose });
   }
 
   getDeviceKey(state) {
@@ -27,6 +27,8 @@ export default class ConnectDevice {
   connectThisDevice({ host }) {
     const thisConnector = this.createConnector({ host });
 
+    let alreadySetupPong = false;
+
     thisConnector.state.subscribe(state => {
       if (!state.nearbyDevices) {
         state.nearbyDevices = [];
@@ -35,6 +37,13 @@ export default class ConnectDevice {
       const deviceKey = this.getDeviceKey(state);
 
       if (deviceKey) {
+        if (!alreadySetupPong) {
+          thisConnector.on('pong', () => {
+            this.mcs.emit('pong', { deviceKey });
+          });
+          alreadySetupPong = true;
+        }
+
         if (!this.thisDeviceAlreadySetup) {
           this.mcs.set({ activeDeviceKey: deviceKey });
           this.initNewConnector({ deviceKey, connector: thisConnector });
@@ -65,16 +74,22 @@ export default class ConnectDevice {
   }
 
   connectOtherDevice({ host, deviceKey }) {
-    const connector = this.createConnector({ host });
+    if (!this.mcs.connectors[deviceKey]) { // because of preconnect, not normal switching
+      const connector = this.createConnector({ host });
 
-    this.initNewConnector({ deviceKey, connector });
+      connector.on('pong', () => {
+        this.mcs.emit('pong', { deviceKey });
+      });
 
-    connector.state.subscribe(state => {
-      if (this.mcs.activeDeviceKey() == deviceKey) {
-        const optimisticDeviceName = state.device ? state.device.deviceName : null;
-        this.foreground.set(state, { optimisticDeviceName });
-      }
-    });
+      this.initNewConnector({ deviceKey, connector });
+
+      connector.state.subscribe(state => {
+        if (this.mcs.activeDeviceKey() == deviceKey) {
+          const optimisticDeviceName = state.device ? state.device.deviceName : null;
+          this.foreground.set(state, { optimisticDeviceName });
+        }
+      });
+    }
   }
 
   initNewConnector({ deviceKey, connector }) {

@@ -1,11 +1,8 @@
-function timedConsoleLog(msg) {
-  console.log(`${new Date().toLocaleString()} → ${msg}`);
-}
-
 function doLogging(color, log, ...args) {
-  if (typeof log == 'function') {
-    // console.log or anything else that wraps it etc.
-    timedConsoleLog(...args);
+  if (log == console.log) {
+    log(`${new Date().toLocaleString()} → ${args}`);
+  } else if (typeof log == 'function') {
+    log(args);
   } else if (log) {
     // dmt logger object
     log.logOutput(color, { source: 'connectome' }, ...args);

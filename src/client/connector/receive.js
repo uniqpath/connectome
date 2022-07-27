@@ -32,7 +32,7 @@ function wireReceive({ jsonData, encryptedData, rawMessage, wasEncrypted, connec
   const nonce = new Uint8Array(integerToByteArray(2 * connector.receivedCount + 1, 24));
 
   if (connector.verbose && !wasEncrypted) {
-    logger.write(log);
+    //logger.write(log);
     logger.magenta(
       log,
       `Connector ${connector.remoteAddress()} → Received message #${connector.receivedCount} ↴`
@@ -55,6 +55,11 @@ function wireReceive({ jsonData, encryptedData, rawMessage, wasEncrypted, connec
     } else {
       connector.emit('receive', { jsonData, rawMessage });
     }
+
+    // logger.magenta(
+    //   log,
+    //   `Connector ${connector.remoteAddress()} → ${rawMessage}`
+    // );
   } else if (encryptedData) {
     // 💡 encryptedJson data!!
     if (connector.verbose == 'extra') {
@@ -74,19 +79,19 @@ function wireReceive({ jsonData, encryptedData, rawMessage, wasEncrypted, connec
     if (flag == 1) {
       const decodedMessage = nacl.util.encodeUTF8(decryptedMessage);
 
-      // if (connector.verbose) {
-      //   logger.write(log, `Received message: ${decodedMessage}`);
-      // }
+      if (connector.verbose) {
+        logger.write(log, `Received message: ${decodedMessage}`);
+      }
 
       try {
         const jsonData = JSON.parse(decodedMessage);
 
         // 💡 rpc
         if (jsonData.jsonrpc) {
-          if (connector.verbose) {
-            logger.magenta(log, `Connector ${connector.remoteAddress()} decrypted rpc result ↴`);
-            logger.gray(log, jsonData);
-          }
+          // if (connector.verbose) {
+          //   logger.magenta(log, `Connector ${connector.remoteAddress()} decrypted rpc result ↴`);
+          //   logger.gray(log, jsonData);
+          // }
 
           wireReceive({ jsonData, rawMessage: decodedMessage, wasEncrypted: true, connector });
           // } else if (jsonData.tag) {
