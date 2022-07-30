@@ -23,7 +23,7 @@ class MultiConnectedStore extends MergeStore {
   }) {
     super();
 
-    const thisDeviceStateKeys = ['time', 'environment', 'nearbyDevices', 'notifications'];
+    const thisDeviceStateKeys = ['time', 'environment', 'nearbyDevices', 'nearbySensors', 'notifications'];
 
     const { publicKey, privateKey } = acceptKeypair(keypair);
 
@@ -82,9 +82,13 @@ class MultiConnectedStore extends MergeStore {
     );
   }
 
-  // only for other devices
-  preconnect({ host, deviceKey }) {
-    this.connectDevice.connectOtherDevice({ host, deviceKey });
+  // returns corresponding connector
+  preconnect({ host, deviceKey, thisDevice }) {
+    if (thisDevice) {
+      return this.localConnector;
+    }
+
+    return this.connectDevice.connectOtherDevice({ host, deviceKey });
   }
 
   switch({ host, deviceKey, deviceName }) {

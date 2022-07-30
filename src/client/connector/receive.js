@@ -35,7 +35,7 @@ function wireReceive({ jsonData, encryptedData, rawMessage, wasEncrypted, connec
     //logger.write(log);
     logger.magenta(
       log,
-      `Connector ${connector.remoteAddress()} → Received message #${connector.receivedCount} ↴`
+      `Connector ${connector.endpoint} → Received message #${connector.receivedCount} ↴`
     );
   }
 
@@ -44,7 +44,7 @@ function wireReceive({ jsonData, encryptedData, rawMessage, wasEncrypted, connec
     if (jsonData.jsonrpc) {
       if (isRpcCallResult(jsonData)) {
         if (connector.verbose && !wasEncrypted) {
-          logger.magenta(log, `Connector ${connector.remoteAddress()} received plain-text rpc result ↴`);
+          logger.magenta(log, `Connector ${connector.endpoint} received plain-text rpc result ↴`);
           logger.gray(log, jsonData);
         }
 
@@ -58,16 +58,16 @@ function wireReceive({ jsonData, encryptedData, rawMessage, wasEncrypted, connec
 
     // logger.magenta(
     //   log,
-    //   `Connector ${connector.remoteAddress()} → ${rawMessage}`
+    //   `Connector ${connector.endpoint} → ${rawMessage}`
     // );
   } else if (encryptedData) {
     // 💡 encryptedJson data!!
     if (connector.verbose == 'extra') {
-      logger.magenta(log, `Connector ${connector.remoteAddress()} received bytes ↴`);
+      logger.magenta(log, `Connector ${connector.endpoint} received bytes ↴`);
       logger.gray(log, encryptedData);
       logger.magenta(
         log,
-        `Connector ${connector.remoteAddress()} decrypting with shared secret ${connector.sharedSecret}...`
+        `Connector ${connector.endpoint} decrypting with shared secret ${connector.sharedSecret}...`
       );
     }
 
@@ -89,7 +89,7 @@ function wireReceive({ jsonData, encryptedData, rawMessage, wasEncrypted, connec
         // 💡 rpc
         if (jsonData.jsonrpc) {
           // if (connector.verbose) {
-          //   logger.magenta(log, `Connector ${connector.remoteAddress()} decrypted rpc result ↴`);
+          //   logger.magenta(log, `Connector ${connector.endpoint} decrypted rpc result ↴`);
           //   logger.gray(log, jsonData);
           // }
 
