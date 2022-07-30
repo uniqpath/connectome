@@ -74,7 +74,8 @@ export default class ConnectDevice {
   }
 
   connectOtherDevice({ host, deviceKey }) {
-    if (!this.mcs.connectors[deviceKey]) { // because of preconnect, not normal switching
+    if (!this.mcs.connectors[deviceKey]) {
+      // because of preconnect, not normal switching
       const connector = this.createConnector({ host });
 
       connector.on('pong', () => {
@@ -90,6 +91,9 @@ export default class ConnectDevice {
         }
       });
     }
+
+    // only used in preconnect method
+    return this.mcs.connectors[deviceKey];
   }
 
   initNewConnector({ deviceKey, connector }) {

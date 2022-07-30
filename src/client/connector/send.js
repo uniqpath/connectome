@@ -47,7 +47,7 @@ function send({ data, connector }) {
         //logger.write(log); // empty line
         logger.green(
           log,
-          `Connector ${connector.remoteAddress()} → Sending encrypted message #${connector.sentCount} ↴`
+          `Connector ${connector.endpoint} → Sending encrypted message #${connector.sentCount} ↴`
         );
         logger.gray(log, data);
       }
@@ -58,7 +58,7 @@ function send({ data, connector }) {
         //logger.write(log); // empty line
         logger.green(
           log,
-          `Connector ${connector.remoteAddress()} → Sending message #${connector.sentCount} ↴`
+          `Connector ${connector.endpoint} → Sending message #${connector.sentCount} ↴`
         );
         logger.gray(log, data);
       }

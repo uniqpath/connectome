@@ -39,42 +39,48 @@ function establishAndMaintainConnection(
     dummy
   });
 
+  const reconnect = () => {
+    tryReconnect({ connector, endpoint }, { WebSocket, reconnect, log, verbose });
+  };
+
   connector.connection = {
     terminate() {
       this.websocket._removeAllCallbacks();
       this.websocket.close();
+      //connector.connectStatus(undefined);
       connector.connectStatus(false);
+      //reconnect();
+      // especially important in multiconnected store
+      setTimeout(reconnect, MAX_RECONNECT_DELAY_AFTER_WS_CLOSE * Math.random());
     },
     endpoint,
     checkTicker: 0
   };
 
-  setTimeout(() => tryReconnect({ connector, endpoint }, { WebSocket, log, verbose }), 10);
-
   const callback = () => {
     if (!connector.decommissioned) {
-      checkConnection({ connector, endpoint }, { WebSocket, log, verbose });
+      checkConnection({ connector, reconnect, log });
       setTimeout(callback, CONN_CHECK_INTERVAL);
     }
   };
 
-  setTimeout(callback, CONN_CHECK_INTERVAL);
+  // setTimeout(() => tryReconnect({ connector, endpoint }, { WebSocket, log, verbose }), 10);
+  // setTimeout(callback, CONN_CHECK_INTERVAL);
+  setTimeout(callback, 10);
 
   return connector;
 }
 
 export default establishAndMaintainConnection;
 
-function checkConnection({ connector, endpoint }, { WebSocket, log, verbose }) {
+function checkConnection({ connector, reconnect, log }) {
   const conn = connector.connection;
 
   //if (verbose && (connectionIdle(conn) || connector.decommissioned)) {
   if (connectionIdle(conn) || connector.decommissioned) {
     if (connectionIdle(conn)) {
-      logger.yellow(
-        log,
-        `${connector.connection.endpoint}: terminating inactive connection`
-      );
+      connector.emit('inactive_connection');
+      logger.yellow(log, `✖ Terminating inactive connection ${connector.connection.endpoint}`);
     } else {
       logger.yellow(
         log,
@@ -96,28 +102,41 @@ function checkConnection({ connector, endpoint }, { WebSocket, log, verbose }) {
       connector.connectStatus(false);
     }
 
-    tryReconnect({ connector, endpoint }, { WebSocket, log, verbose });
+    //tryReconnect({ connector, endpoint }, { WebSocket, log, verbose });
+    reconnect();
   }
 
   conn.checkTicker += 1;
 }
 
-function tryReconnect({ connector, endpoint }, { WebSocket, log, verbose }) {
+function tryReconnect({ connector, endpoint }, { WebSocket, reconnect, log, verbose }) {
   const conn = connector.connection;
 
+  // console.log(`Try reconnect: ${endpoint}, ${conn?.currentlyTryingWS?.readyState}`);
+
   if (conn.currentlyTryingWS && conn.currentlyTryingWS.readyState == wsCONNECTING) {
-    if (conn.currentlyTryingWS._waitForConnectCounter == 3) {
+    if (conn.currentlyTryingWS._waitForConnectCounter == WAIT_FOR_NEW_CONN_TICKS) {
+      if (verbose) {
+        logger.write(log, `${endpoint} took to long to connect, discarding ws`);
+      }
+
       conn.currentlyTryingWS._removeAllCallbacks();
       conn.currentlyTryingWS.close();
     } else {
       conn.currentlyTryingWS._waitForConnectCounter += 1;
+      // console.log(
+      //   `Increaed new ws connection retry counter to ${conn.currentlyTryingWS._waitForConnectCounter}`
+      // );
       return;
     }
   }
 
   const ws = new WebSocket(endpoint);
   ws.__id = Math.random();
-  //logger.write(log, `created new websocket: ${ws.__id} to ${conn.endpoint}`);
+
+  if (verbose) {
+    logger.write(log, `Created new websocket ${conn.endpoint}`);
+  }
 
   conn.currentlyTryingWS = ws;
   conn.currentlyTryingWS._waitForConnectCounter = 0;
@@ -137,7 +156,7 @@ function tryReconnect({ connector, endpoint }, { WebSocket, log, verbose }) {
 
     conn.currentlyTryingWS = null;
     conn.checkTicker = 0;
-    addSocketListeners({ ws, connector, openCallback }, { log, verbose });
+    addSocketListeners({ ws, connector, openCallback, reconnect }, { log, verbose });
 
     conn.websocket = ws;
     connector.connectStatus(true);
@@ -154,7 +173,7 @@ function tryReconnect({ connector, endpoint }, { WebSocket, log, verbose }) {
   }
 }
 
-function addSocketListeners({ ws, connector, openCallback }, { log, verbose }) {
+function addSocketListeners({ ws, connector, openCallback, reconnect }, { log, verbose }) {
   const conn = connector.connection;
 
   const errorCallback = event => {
@@ -167,10 +186,13 @@ function addSocketListeners({ ws, connector, openCallback }, { log, verbose }) {
     // this also wasn't useful / didn't work everywhere: ws.onerror = error => {}
   };
 
-  const closeCallback = m => {
-    logger.write(log, `websocket ${connector.connection.endpoint} connection closed`);
+  const closeCallback = () => {
+    logger.write(log, `✖ Connection ${connector.connection.endpoint} closed`);
 
-    connector.connectStatus(false);
+    connector.connectStatus(undefined);
+    //connector.connectStatus(false);
+    // especially important in multiconnected store:
+    setTimeout(reconnect, MAX_RECONNECT_DELAY_AFTER_WS_CLOSE * Math.random());
   };
 
   const messageCallback = _msg => {

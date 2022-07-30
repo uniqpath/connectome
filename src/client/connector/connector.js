@@ -20,6 +20,8 @@ import { newKeypair, acceptKeypair } from '../../utils/crypto/index.js';
 import ProtocolState from './protocolState';
 import ConnectionState from './connectionState';
 
+const ADJUST_UNDEFINED_CONNECTION_STATUS_DELAY = 700; // was 700 for a long time, was ok, maybe a bit long, before that 300
+
 class Connector extends EventEmitter {
   constructor({
     endpoint,
@@ -64,6 +66,14 @@ class Connector extends EventEmitter {
 
     this.connected = new WritableStore();
 
+    this.delayedAdjustConnectionStatus();
+
+    if (verbose) {
+      logger.cyan(this.log, `Connector ${this.remoteAddress()} instantiated`);
+    }
+  }
+
+  delayedAdjustConnectionStatus() {
     // 💡 connected == undefined ==> while trying to connect
     // 💡 connected == false => while disconnected
     // 💡 connected == true => while connected
@@ -72,11 +82,7 @@ class Connector extends EventEmitter {
       if (this.connected.get() == undefined) {
         this.connected.set(false);
       }
-    }, 700); // formerly 300ms
-
-    if (verbose) {
-      logger.cyan(this.log, `Connector ${this.remoteAddress()} instantiated`);
-    }
+    }, ADJUST_UNDEFINED_CONNECTION_STATUS_DELAY);
   }
 
   send(data) {
@@ -156,9 +162,9 @@ class Connector extends EventEmitter {
       this.successfulConnectsCount += 1;
 
       if (this.verbose) {
-        logger.write(
+        logger.green(
           this.log,
-          `✓ Connector ${this.remoteAddress()} websocket connected #${this.successfulConnectsCount}`
+          `✓ Connector ${this.remoteAddress()} connected #${this.successfulConnectsCount}`
         );
       }
 
@@ -225,7 +231,22 @@ class Connector extends EventEmitter {
 
       if (isDisconnect) {
         this.emit('disconnect');
-        this.connected.set(false);
+
+        // connected will be false or undefined
+        // establishAndMaintainConnection sets this to undefined after close connection
+        // so that again red cross doesn't appear immediately -- experimental!
+
+        // used unly when ws is closed
+        // useful on dmt-mobile when we switch back to app
+        // and websockets need to be quickly reconnected
+        // we want to avoid the red x
+        // on the other hand with legit disconnects we will have to tolerate a small delay
+        if (connected == undefined) {
+          this.delayedAdjustConnectionStatus();
+        }
+
+        this.connected.set(connected);
+        //this.connected.set(false);
       }
     }
   }
