@@ -5,12 +5,19 @@ const wsOPEN = 1;
 //const wsCLOSING = 2;
 //const wsCLOSED = 3;
 
-// it was 5 for long time, 2 seems to be working great!
-// now testing one
-const CONN_IDLE_TICKS = 2;
+// it was 5 for long time (and with higher CONN_CHECK_INTERVAL), 3 seems to be working great now (CONN_CHECK_INTERVAL=800), sweet balance!
+// 1,2 is too low... some raspberries when busy (switching songs / just starting dmt-proc) can easily miss out on sending pongs at the right moment
+const CONN_IDLE_TICKS = 3;
+
+// how long to wait for a new websocket to connect... after this we cancel it
+const WAIT_FOR_NEW_CONN_TICKS = 5; // 4800 ms ( = (5+1) * CONN_CHECK_INTERVAL )
 
 // connection tick
-const CONN_CHECK_INTERVAL = 1000; // was 1500 for a long time, then 1000 seemed to work ok, now testing 500
+const CONN_CHECK_INTERVAL = 800; // was 1500 for a long time, then 1000 seemed to work ok, now testing 800
+
+//from zero to this much ms delay after ws has been terminated for reconnect to be tries
+//const MAX_RECONNECT_DELAY_AFTER_WS_CLOSE = 50;
+//const MAX_RECONNECT_DELAY_AFTER_WS_CLOSE = 0; // todo: remove this .. and two timeout handlers
 
 //⚠️ TODO: pass CONN_CHECK_INTERVAL and/or CONN_IDLE_TICKS as params to connect function
 // and supply 500 / 1 from multiconnected store .. because it works locally
@@ -49,9 +56,9 @@ function establishAndMaintainConnection(
       this.websocket.close();
       //connector.connectStatus(undefined);
       connector.connectStatus(false);
-      //reconnect();
-      // especially important in multiconnected store
-      setTimeout(reconnect, MAX_RECONNECT_DELAY_AFTER_WS_CLOSE * Math.random());
+      reconnect();
+      //for multiconnected store ↴ so that not everything tries to reconnect at once.. oh well didn't have much influence it seems, we can do everything at once! :)
+      //setTimeout(reconnect, MAX_RECONNECT_DELAY_AFTER_WS_CLOSE * Math.random());
     },
     endpoint,
     checkTicker: 0
@@ -112,21 +119,16 @@ function checkConnection({ connector, reconnect, log }) {
 function tryReconnect({ connector, endpoint }, { WebSocket, reconnect, log, verbose }) {
   const conn = connector.connection;
 
-  // console.log(`Try reconnect: ${endpoint}, ${conn?.currentlyTryingWS?.readyState}`);
-
   if (conn.currentlyTryingWS && conn.currentlyTryingWS.readyState == wsCONNECTING) {
     if (conn.currentlyTryingWS._waitForConnectCounter == WAIT_FOR_NEW_CONN_TICKS) {
-      if (verbose) {
-        logger.write(log, `${endpoint} took to long to connect, discarding ws`);
-      }
+      //if (verbose) {
+      //logger.write(log, `${endpoint} took to long to connect, discarding ws`);
+      //}
 
       conn.currentlyTryingWS._removeAllCallbacks();
       conn.currentlyTryingWS.close();
     } else {
       conn.currentlyTryingWS._waitForConnectCounter += 1;
-      // console.log(
-      //   `Increaed new ws connection retry counter to ${conn.currentlyTryingWS._waitForConnectCounter}`
-      // );
       return;
     }
   }
@@ -134,9 +136,9 @@ function tryReconnect({ connector, endpoint }, { WebSocket, reconnect, log, verb
   const ws = new WebSocket(endpoint);
   ws.__id = Math.random();
 
-  if (verbose) {
-    logger.write(log, `Created new websocket ${conn.endpoint}`);
-  }
+  // if (verbose) {
+  //   logger.write(log, `Created new websocket ${conn.endpoint}`);
+  // }
 
   conn.currentlyTryingWS = ws;
   conn.currentlyTryingWS._waitForConnectCounter = 0;
@@ -189,10 +191,14 @@ function addSocketListeners({ ws, connector, openCallback, reconnect }, { log, v
   const closeCallback = () => {
     logger.write(log, `✖ Connection ${connector.connection.endpoint} closed`);
 
+    // when switching back to dmt-mobile it will usually quickly close the old connection and reconnect
+    // we want some buffer delay (see connector::ADJUST_UNDEFINED_CONNECTION_STATUS_DELAY) as we had on first connection
+    // where we don't show red x for some short time so that ws has a chance to connect first ... looks better in the UI
+    // flip side is that there is such small delay between when we stop some process and when red x appears... but it's quite ok!
+    // we do however disable all commands immediately ... so: show red X when connect status is FALSE excusively and disable all gui actions when it's NOT TRUE (false or undefined)
     connector.connectStatus(undefined);
-    //connector.connectStatus(false);
-    // especially important in multiconnected store:
-    setTimeout(reconnect, MAX_RECONNECT_DELAY_AFTER_WS_CLOSE * Math.random());
+    reconnect();
+    //setTimeout(reconnect, MAX_RECONNECT_DELAY_AFTER_WS_CLOSE * Math.random()); // turns out we don't really need to do these delays, works fine without
   };
 
   const messageCallback = _msg => {

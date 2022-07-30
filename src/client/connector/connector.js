@@ -69,7 +69,7 @@ class Connector extends EventEmitter {
     this.delayedAdjustConnectionStatus();
 
     if (verbose) {
-      logger.cyan(this.log, `Connector ${this.remoteAddress()} instantiated`);
+      logger.green(this.log, `Connector ${this.endpoint} created`);
     }
   }
 
@@ -162,10 +162,7 @@ class Connector extends EventEmitter {
       this.successfulConnectsCount += 1;
 
       if (this.verbose) {
-        logger.green(
-          this.log,
-          `✓ Connector ${this.remoteAddress()} connected #${this.successfulConnectsCount}`
-        );
+        logger.green(this.log, `✓ Connector ${this.endpoint} connected #${this.successfulConnectsCount}`);
       }
 
       const websocketId = this.connection.websocket.__id;
@@ -292,7 +289,7 @@ class Connector extends EventEmitter {
                 const tag = this.tag ? ` (${this.tag})` : '';
                 logger.cyan(
                   this.log,
-                  `✓ Protocol [ ${this.protocol || '"no-name"'} ] connection [ ${this.endpoint}${tag} ] ready`
+                  `✓ [ ${this.protocol || '"no-name"'} ] connection [ ${this.endpoint}${tag} ] ready`
                 );
               }
             })
