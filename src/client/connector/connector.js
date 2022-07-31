@@ -22,6 +22,9 @@ import ConnectionState from './connectionState';
 
 const ADJUST_UNDEFINED_CONNECTION_STATUS_DELAY = 700; // was 700 for a long time, was ok, maybe a bit long, before that 300
 
+const DECOMMISSION_INACTIVITY = 120000; // 2min
+//const DECOMMISSION_INACTIVITY = 10000; // 2min
+
 class Connector extends EventEmitter {
   constructor({
     endpoint,
@@ -31,6 +34,7 @@ class Connector extends EventEmitter {
     verbose = false,
     tag,
     log = console.log,
+    decommissionable = false,
     dummy
   } = {}) {
     super();
@@ -49,6 +53,8 @@ class Connector extends EventEmitter {
     this.endpoint = endpoint;
     this.verbose = verbose;
     this.tag = tag;
+
+    this.decommissionable = decommissionable;
 
     this.sentCount = 0;
     this.receivedCount = 0;
@@ -71,6 +77,16 @@ class Connector extends EventEmitter {
     if (verbose) {
       logger.green(this.log, `Connector ${this.endpoint} created`);
     }
+
+    this.decommissionCheckCounter = 0;
+
+    // not actually true but for what we need it's great ...
+    // this will make sure that we correctly decommission connectors that never even connected for the first time
+    this.lastPongReceivedAt = Date.now();
+
+    this.on('pong', () => {
+      this.lastPongReceivedAt = Date.now();
+    });
   }
 
   delayedAdjustConnectionStatus() {
@@ -148,10 +164,6 @@ class Connector extends EventEmitter {
     return !this.transportConnected;
   }
 
-  decommission() {
-    this.decommissioned = true;
-  }
-
   connectStatus(connected) {
     if (connected) {
       this.sentCount = 0;
@@ -182,7 +194,7 @@ class Connector extends EventEmitter {
         .catch(e => {
           logger.write(
             this.log,
-            `x Connector ${this.endpoint} / Protocol ${this.protocol} finalizeHandshake error: ${e.message}`
+            `x Connector ${this.endpoint} [${this.protocol}] handshake error: ${e.message}`
           );
 
           // if there was a timeout error our websocket might have already closed
@@ -216,7 +228,7 @@ class Connector extends EventEmitter {
         const tag = this.tag ? ` (${this.tag})` : '';
         logger.write(
           this.log,
-          `Connector ${this.endpoint}${tag} was not able to connect at first try, setting READY to false`
+          `Connector ${this.endpoint}${tag} was not able to connect at first try`
         );
       }
 
@@ -242,9 +254,43 @@ class Connector extends EventEmitter {
           this.delayedAdjustConnectionStatus();
         }
 
-        this.connected.set(connected);
-        //this.connected.set(false);
+        this.connected.set(connected); // false or undefined
       }
+    }
+  }
+
+  checkForDecommission() {
+    if (!this.decommissionable) {
+      return;
+    }
+
+    // we want fresh 12 consecutive checks and only then we check for late pings and decommission connector
+    // this assures that in dmt-mobile when switching back to app connector has chance to reconnect to any endpoint
+    // that was either down or dmt-mobile was in background ... so checks for late pings are only relevant if app is in foreground
+    // for a few seconds
+
+    if (this.decommissionCheckRequestedAt && Date.now() - this.decommissionCheckRequestedAt > 3000) {
+      this.decommissionCheckCounter = 0;
+    }
+
+    this.decommissionCheckRequestedAt = Date.now();
+
+    this.decommissionCheckCounter += 1;
+
+    if (this.decommissionCheckCounter > 12) {
+      // 12 x tick = around 10s
+      if (Date.now() - this.lastPongReceivedAt > DECOMMISSION_INACTIVITY) {
+        logger.write(this.log, `Decommissioning connector ${this.endpoint} (long inactive)`);
+
+        this.decommission();
+        this.emit('decommission');
+      }
+    }
+  }
+
+  decommission() {
+    if (this.decommissionable) {
+      this.decommissioned = true;
     }
   }
 
@@ -274,7 +320,7 @@ class Connector extends EventEmitter {
           if (this.verbose) {
             logger.write(
               this.log,
-              `Connector ${this.endpoint}: Established shared secret through diffie-hellman exchange.`
+              `Connector ${this.endpoint} established shared secret through diffie-hellman exchange.`
             );
           }
 
