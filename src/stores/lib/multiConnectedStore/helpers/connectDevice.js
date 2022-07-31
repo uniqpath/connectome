@@ -8,9 +8,9 @@ export default class ConnectDevice {
     this.connectToDeviceKey = connectToDeviceKey;
   }
 
-  createConnector({ host }) {
+  createConnector({ host, decommissionable = false }) {
     const { port, protocol, rpcRequestTimeout, log, verbose, keypair } = this.mcs;
-    return connect({ host, port, protocol, keypair, rpcRequestTimeout, log, verbose });
+    return connect({ host, port, protocol, keypair, rpcRequestTimeout, decommissionable, log, verbose });
   }
 
   getDeviceKey(state) {
@@ -76,20 +76,36 @@ export default class ConnectDevice {
   connectOtherDevice({ host, deviceKey }) {
     if (!this.mcs.connectors[deviceKey]) {
       // because of preconnect, not normal switching
-      const connector = this.createConnector({ host });
+      const connector = this.createConnector({ host, decommissionable: true });
 
-      connector.on('pong', () => {
-        this.mcs.emit('pong', { deviceKey });
+      connector.on('decommission', () => {
+        delete this.mcs.connectors[deviceKey];
+        // todo: maybe we can also purge state in MCS ? or we don't have this ??
+        // probably not...
+        if (connector.__removeListeners) {
+          connector.__removeListeners();
+        }
       });
+
+      const pongCallback = () => {
+        this.mcs.emit('pong', { deviceKey });
+      };
+
+      connector.on('pong', pongCallback);
 
       this.initNewConnector({ deviceKey, connector });
 
-      connector.state.subscribe(state => {
+      const unsubscribe = connector.state.subscribe(state => {
         if (this.mcs.activeDeviceKey() == deviceKey) {
           const optimisticDeviceName = state.device ? state.device.deviceName : null;
           this.foreground.set(state, { optimisticDeviceName });
         }
       });
+
+      connector.__removeListeners = () => {
+        connector.off('pong', pongCallback);
+        unsubscribe();
+      };
     }
 
     // only used in preconnect method

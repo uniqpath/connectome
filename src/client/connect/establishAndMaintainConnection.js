@@ -30,7 +30,20 @@ import logger from '../../utils/logger/logger.js';
 
 //todo: remove 'dummy' argument once legacyLib with old MCS is history
 function establishAndMaintainConnection(
-  { endpoint, host, port, protocol, keypair, remotePubkey, rpcRequestTimeout, log, verbose, tag, dummy },
+  {
+    endpoint,
+    host,
+    port,
+    protocol,
+    keypair,
+    remotePubkey,
+    rpcRequestTimeout,
+    decommissionable,
+    log,
+    verbose,
+    tag,
+    dummy
+  },
   { WebSocket }
 ) {
   endpoint = determineEndpoint({ endpoint, host, port });
@@ -43,6 +56,7 @@ function establishAndMaintainConnection(
     verbose,
     tag,
     log,
+    decommissionable,
     dummy
   });
 
@@ -87,12 +101,15 @@ function checkConnection({ connector, reconnect, log }) {
   if (connectionIdle(conn) || connector.decommissioned) {
     if (connectionIdle(conn)) {
       connector.emit('inactive_connection');
-      logger.yellow(log, `✖ Terminating inactive connection ${connector.connection.endpoint}`);
+      logger.yellow(log, `✖ Terminated inactive connection ${connector.connection.endpoint}`);
     } else {
+      // decommissioned
       logger.yellow(
         log,
         `Connection ${connector.connection.endpoint} decommisioned, closing websocket ${conn.websocket.__id}, will not retry again `
       );
+
+      decommission(connector);
     }
 
     conn.terminate();
@@ -109,7 +126,6 @@ function checkConnection({ connector, reconnect, log }) {
       connector.connectStatus(false);
     }
 
-    //tryReconnect({ connector, endpoint }, { WebSocket, log, verbose });
     reconnect();
   }
 
@@ -119,11 +135,24 @@ function checkConnection({ connector, reconnect, log }) {
 function tryReconnect({ connector, endpoint }, { WebSocket, reconnect, log, verbose }) {
   const conn = connector.connection;
 
+  // if device on the other side went missing we will usually get websocket connecting timeouts
+  // so we retry WAIT_FOR_NEW_CONN_TICKS times (4800ms in total) and then discard the current websocket
+  // and we again try the same with a new WebSocket
+  // if device (IP) is online but websocket server is not responsing / program not running, then ...
+  // [ see explanation a few lines below] ...
+
+  connector.checkForDecommission();
+
+  if (connector.decommissioned) {
+    decommission(connector); // our side of things -- tear down any ws callbacks
+    return;
+  }
+
   if (conn.currentlyTryingWS && conn.currentlyTryingWS.readyState == wsCONNECTING) {
     if (conn.currentlyTryingWS._waitForConnectCounter == WAIT_FOR_NEW_CONN_TICKS) {
-      //if (verbose) {
-      //logger.write(log, `${endpoint} took to long to connect, discarding ws`);
-      //}
+      if (verbose) {
+        logger.write(log, `${endpoint} took to long to reconnect, discarding ws`);
+      }
 
       conn.currentlyTryingWS._removeAllCallbacks();
       conn.currentlyTryingWS.close();
@@ -132,6 +161,13 @@ function tryReconnect({ connector, endpoint }, { WebSocket, reconnect, log, verb
       return;
     }
   }
+
+  // so in case when device is online but websocket server is not running we usually
+  // get immediate close event (websocket readyState becomes CLOSED) and we land here every
+  // CONN_CHECK_INTERVAL ms to create a new WebSocket and try again with a new WebSocket
+  // which will again fail immediately until it can successfuly connect (process is running)
+  // if in addition to process not running the devices goes offline, then we get long delays again
+  // (see above)... and we try with a new websocket every 4800ms again instead on every tick (800ms)
 
   const ws = new WebSocket(endpoint);
   ws.__id = Math.random();
@@ -152,6 +188,11 @@ function tryReconnect({ connector, endpoint }, { WebSocket, reconnect, log, verb
   }
 
   const openCallback = () => {
+    // should not come here because we remove open callbacks, but sometimes it might
+    if (connector.decommissioned) {
+      return;
+    }
+
     if (verbose) {
       logger.write(log, `websocket ${endpoint} connection opened`);
     }
@@ -191,6 +232,11 @@ function addSocketListeners({ ws, connector, openCallback, reconnect }, { log, v
   const closeCallback = () => {
     logger.write(log, `✖ Connection ${connector.connection.endpoint} closed`);
 
+    if (connector.decommissioned) {
+      connector.connectStatus(false);
+      return;
+    }
+
     // when switching back to dmt-mobile it will usually quickly close the old connection and reconnect
     // we want some buffer delay (see connector::ADJUST_UNDEFINED_CONNECTION_STATUS_DELAY) as we had on first connection
     // where we don't show red x for some short time so that ws has a chance to connect first ... looks better in the UI
@@ -202,6 +248,10 @@ function addSocketListeners({ ws, connector, openCallback, reconnect }, { log, v
   };
 
   const messageCallback = _msg => {
+    if (connector.decommissioned) {
+      return;
+    }
+
     conn.checkTicker = 0;
 
     const msg = browser ? _msg.data : _msg;
@@ -242,6 +292,24 @@ function addSocketListeners({ ws, connector, openCallback, reconnect }, { log, v
     ws.on('close', closeCallback);
     ws.on('message', messageCallback);
   }
+}
+
+function decommission(connector) {
+  const conn = connector.connection;
+
+  if (conn.currentlyTryingWS) {
+    conn.currentlyTryingWS._removeAllCallbacks();
+    conn.currentlyTryingWS.close();
+    conn.currentlyTryingWS = null;
+  }
+
+  if (conn.ws) {
+    conn.ws._removeAllCallbacks();
+    conn.ws.close();
+    conn.ws = null;
+  }
+
+  connector.connectStatus(false);
 }
 
 function socketConnected(conn) {
