@@ -6,11 +6,12 @@ nacl.util = naclutil;
 
 import send from './send.js';
 import receive from './receive.js';
+import handshake from './handshake.js';
 
 import WritableStore from '../../stores/lib/helperStores/writableStore.js';
 import logger from '../../utils/logger/logger.js';
 
-import { EventEmitter, listify, hexToBuffer, bufferToHex } from '../../utils/index.js';
+import { EventEmitter, listify, bufferToHex } from '../../utils/index.js';
 
 import RpcClient from '../rpc/client.js';
 import RPCTarget from '../rpc/RPCTarget.js';
@@ -24,6 +25,8 @@ const ADJUST_UNDEFINED_CONNECTION_STATUS_DELAY = 700; // was 700 for a long time
 
 const DECOMMISSION_INACTIVITY = 120000; // 2min
 //const DECOMMISSION_INACTIVITY = 10000; // 2min
+
+const wsOPEN = 1;
 
 class Connector extends EventEmitter {
   constructor({
@@ -179,11 +182,18 @@ class Connector extends EventEmitter {
 
       const websocketId = this.connection.websocket.__id;
 
-      this.diffieHellman({
-        clientPrivateKey: this.clientPrivateKey,
-        clientPublicKey: this.clientPublicKey,
-        protocol: this.protocol
-      })
+      const afterFirstStep = ({ sharedSecret, remotePubkeyHex }) => {
+        this.sharedSecret = sharedSecret;
+        this._remotePubkeyHex = remotePubkeyHex;
+      };
+
+      // there can {error} object returned from finalizeHandshake in case protocol is not present on server
+      // websocket will just keep hanging until first reconnect and prehaps then the desired protocol is present in the endpoint
+      // two more possible errors which are indeed handled in our catch block are:
+      // - timeout when handshake messages were delayed, we have to try again in this case
+      // - some other rpc error (?) mayme implementation.. but this is not relevant since we have no issues that throw inside our handshake
+      // procuderes on server - it is tested well enough, perhaps later if something is added we will encounter such errors again?
+      handshake({ connector: this, afterFirstStep })
         .then(() => {
           this.connectedAt = Date.now();
           this.connected.set(true);
@@ -197,11 +207,11 @@ class Connector extends EventEmitter {
             `x Connector ${this.endpoint} [${this.protocol}] handshake error: ${e.message}`
           );
 
-          // if there was a timeout error our websocket might have already closed
-          // we only drop the current websocket if it is still open and there was a rpc error,
+          // if there was a timeout error our websocket MIGHT have already closed
+          // we only drop the current websocket if it is still open,
           // most likely it was not a timeout but some error on the other end which was passed to us
           // websocket would stay open but to try and reconnect we have to drop it, otherwise it will be left hanging
-          const wsOPEN = 1;
+          // but sometimes we also get an open websocket after rpc timeout (not sure but this code handles it anyway, should be no problem, only better for all cases)
           if (
             this.connection.websocket.__id == websocketId &&
             this.connection.websocket.readyState == wsOPEN
@@ -212,6 +222,7 @@ class Connector extends EventEmitter {
             );
 
             // ⚠️ todo: test with some rpc error (not timeout) .. (not sure how to achieve it)..
+            // not so urgent since we don't expect rpc errors except timeouts (we don't have bugs in remote handshake endpoints which would be passes here as rpc errors over the wire)
             // and maybe implement a short delay here so that there is no immediate fast infinite reconnect loop
             // with error thrown, socket terminated, error thrown again etc.
             this.connection.terminate();
@@ -226,10 +237,7 @@ class Connector extends EventEmitter {
 
       if (this.transportConnected == undefined) {
         const tag = this.tag ? ` (${this.tag})` : '';
-        logger.write(
-          this.log,
-          `Connector ${this.endpoint}${tag} was not able to connect at first try`
-        );
+        logger.write(this.log, `Connector ${this.endpoint}${tag} was not able to connect at first try`);
       }
 
       this.transportConnected = false;
@@ -304,45 +312,6 @@ class Connector extends EventEmitter {
 
   attachObject(handle, obj) {
     new RPCTarget({ serversideChannel: this, serverMethods: obj, methodPrefix: handle });
-  }
-
-  diffieHellman({ clientPrivateKey, clientPublicKey, protocol }) {
-    return new Promise((success, reject) => {
-      this.remoteObject('Auth')
-        .call('exchangePubkeys', { pubkey: this.clientPublicKeyHex })
-        .then(remotePubkeyHex => {
-          const sharedSecret = nacl.box.before(hexToBuffer(remotePubkeyHex), clientPrivateKey);
-
-          this.sharedSecret = sharedSecret;
-
-          this._remotePubkeyHex = remotePubkeyHex;
-
-          if (this.verbose) {
-            logger.write(
-              this.log,
-              `Connector ${this.endpoint} established shared secret through diffie-hellman exchange.`
-            );
-          }
-
-          this.remoteObject('Auth')
-            .call('finalizeHandshake', { protocol })
-            .then(res => {
-              if (res && res.error) {
-                reject(res.error);
-              } else {
-                success();
-
-                const tag = this.tag ? ` (${this.tag})` : '';
-                logger.cyan(
-                  this.log,
-                  `✓ [ ${this.protocol || '"no-name"'} ] connection [ ${this.endpoint}${tag} ] ready`
-                );
-              }
-            })
-            .catch(reject); // for example Timeout ... delayed! we have to be careful with closing any connections because new websocket might have already be created, we should not close that one
-        })
-        .catch(reject);
-    });
   }
 
   clientPubkey() {
