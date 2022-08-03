@@ -64,7 +64,7 @@ export default class AuthTarget extends EventEmitter {
     if (initializeProtocol({ server, channel })) {
       server.emit('connection', channel);
     } else {
-      const error = `Error: request from ${channel.remoteIp()} (${channel.remotePubkeyHex()}) - unknown protocol ${protocol}, disconnecting in 60s`;
+      const error = `Error: request from ${channel.remoteIp()} (${channel.remotePubkeyHex()}) - unknown protocol ${protocol}, disconnecting in 1h`;
 
       _errorReportCounters[channel.remoteIp()] = (_errorReportCounters[channel.remoteIp()] || 0) + 1;
 
@@ -88,9 +88,16 @@ export default class AuthTarget extends EventEmitter {
         _errorReportTimestamps[channel.remoteIp()] = Date.now();
       }
 
+      // we keep websocket open / hanging for one hour
+      // so there are no looped reconnects on non-existing protocol
+      // nothing will be happening on such websocket and will remain non-ready since it didn't complete the handshake
+      // in case protocol is added to this endpoint then process must have restarted anyway
+      // and these channels will be gone.. all frontend connectors with inactive hanging websockets
+      // will then get disconnected since websocket server will close.. and then they will start trying to reconnect
+      // if protocol is added here, it will succeed, it not the same thing will happen again - a hanging websocket
       setTimeout(() => {
         channel.terminate();
-      }, 60 * 60 * 1000); // we keep it hanging for one hour, why not .. reconsider this approach and how to block such leech connections... but maybe this is good enough
+      }, 60 * 60 * 1000);
 
       return { error };
       //channel.terminate(); // don't do this so we don't get reconnect looping!
