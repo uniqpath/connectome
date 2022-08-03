@@ -5,15 +5,15 @@ const wsOPEN = 1;
 //const wsCLOSING = 2;
 //const wsCLOSED = 3;
 
+// connection tick
+const CONN_CHECK_INTERVAL = 800; // was 1500 for a long time, then 1000 seemed to work ok, now testing 800
+
 // it was 5 for long time (and with higher CONN_CHECK_INTERVAL), 3 seems to be working great now (CONN_CHECK_INTERVAL=800), sweet balance!
 // 1,2 is too low... some raspberries when busy (switching songs / just starting dmt-proc) can easily miss out on sending pongs at the right moment
 const CONN_IDLE_TICKS = 3;
 
 // how long to wait for a new websocket to connect... after this we cancel it
 const WAIT_FOR_NEW_CONN_TICKS = 5; // 4800 ms ( = (5+1) * CONN_CHECK_INTERVAL )
-
-// connection tick
-const CONN_CHECK_INTERVAL = 800; // was 1500 for a long time, then 1000 seemed to work ok, now testing 800
 
 //from zero to this much ms delay after ws has been terminated for reconnect to be tries
 //const MAX_RECONNECT_DELAY_AFTER_WS_CLOSE = 50;

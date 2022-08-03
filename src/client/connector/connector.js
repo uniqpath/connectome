@@ -202,11 +202,6 @@ class Connector extends EventEmitter {
           this.emit('ready');
         })
         .catch(e => {
-          logger.write(
-            this.log,
-            `x Connector ${this.endpoint} [${this.protocol}] handshake error: ${e.message}`
-          );
-
           // if there was a timeout error our websocket MIGHT have already closed
           // we only drop the current websocket if it is still open,
           // most likely it was not a timeout but some error on the other end which was passed to us
@@ -216,6 +211,18 @@ class Connector extends EventEmitter {
             this.connection.websocket.__id == websocketId &&
             this.connection.websocket.readyState == wsOPEN
           ) {
+            //⚠️ we only show if it seems still relevant, special case
+            // previously we had this first log output above this if statement
+            // so on every reject
+            // but then timeout messages sometimes came for websockets that already closed because of normal reconnect when dmt-proc was restarting etc.
+            // and it was strange because new connector was ready and then this late error came
+            // now we don't report handshake rpc errors on already closed websockets, they are probably no interesting at all
+            // but still - watch this space for some time, maybe there are some small remaining voids in this logic
+            logger.write(
+              this.log,
+              `x Connector ${this.endpoint} [${this.protocol}] handshake error: ${e.message}`
+            );
+
             logger.write(
               this.log,
               `Connector ${this.endpoint} dropping stale websocket after handshake error`
