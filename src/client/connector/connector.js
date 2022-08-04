@@ -1,5 +1,3 @@
-//import colors from 'kleur';
-
 import nacl from 'tweetnacl';
 import naclutil from 'tweetnacl-util';
 nacl.util = naclutil;
@@ -23,7 +21,8 @@ import ConnectionState from './connectionState';
 
 const ADJUST_UNDEFINED_CONNECTION_STATUS_DELAY = 700; // was 700 for a long time, was ok, maybe a bit long, before that 300
 
-const DECOMMISSION_INACTIVITY = 120000; // 2min
+const DECOMMISSION_INACTIVITY = 60000; // 1min
+//const DECOMMISSION_INACTIVITY = 120000; // 2min
 //const DECOMMISSION_INACTIVITY = 10000; // 2min
 
 const wsOPEN = 1;
@@ -220,12 +219,12 @@ class Connector extends EventEmitter {
             // but still - watch this space for some time, maybe there are some small remaining voids in this logic
             logger.write(
               this.log,
-              `x Connector ${this.endpoint} [${this.protocol}] handshake error: ${e.message}`
+              `${this.endpoint} x Connector [ ${this.protocol} ] handshake error: ${e.message}`
             );
 
             logger.write(
               this.log,
-              `Connector ${this.endpoint} dropping stale websocket after handshake error`
+              `${this.endpoint} Connector dropping stale websocket after handshake error`
             );
 
             // ⚠️ todo: test with some rpc error (not timeout) .. (not sure how to achieve it)..
@@ -243,8 +242,8 @@ class Connector extends EventEmitter {
       }
 
       if (this.transportConnected == undefined) {
-        const tag = this.tag ? ` (${this.tag})` : '';
-        logger.write(this.log, `Connector ${this.endpoint}${tag} was not able to connect at first try`);
+        //const tag = this.tag ? ` (${this.tag})` : '';
+        logger.write(this.log, `${this.endpoint} Connector was not able to connect at first try`);
       }
 
       this.transportConnected = false;

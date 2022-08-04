@@ -6,14 +6,14 @@ const wsOPEN = 1;
 //const wsCLOSED = 3;
 
 // connection tick
-const CONN_CHECK_INTERVAL = 800; // was 1500 for a long time, then 1000 seemed to work ok, now testing 800
+const CONN_CHECK_INTERVAL = 1000; // was 1500 for a long time, then 1000 seemed to work ok, 800 was prehaps a bit too low
 
 // it was 5 for long time (and with higher CONN_CHECK_INTERVAL), 3 seems to be working great now (CONN_CHECK_INTERVAL=800), sweet balance!
 // 1,2 is too low... some raspberries when busy (switching songs / just starting dmt-proc) can easily miss out on sending pongs at the right moment
 const CONN_IDLE_TICKS = 3;
 
 // how long to wait for a new websocket to connect... after this we cancel it
-const WAIT_FOR_NEW_CONN_TICKS = 5; // 4800 ms ( = (5+1) * CONN_CHECK_INTERVAL )
+const WAIT_FOR_NEW_CONN_TICKS = 5; // 5000 ms ( = (5) * CONN_CHECK_INTERVAL )
 
 //from zero to this much ms delay after ws has been terminated for reconnect to be tries
 //const MAX_RECONNECT_DELAY_AFTER_WS_CLOSE = 50;
@@ -101,12 +101,12 @@ function checkConnection({ connector, reconnect, log }) {
   if (connectionIdle(conn) || connector.decommissioned) {
     if (connectionIdle(conn)) {
       connector.emit('inactive_connection');
-      logger.yellow(log, `✖ Terminated inactive connection ${connector.connection.endpoint}`);
+      logger.yellow(log, `${connector.endpoint} ✖ Terminated inactive connection`);
     } else {
       // decommissioned
       logger.yellow(
         log,
-        `Connection ${connector.connection.endpoint} decommisioned, closing websocket ${conn.websocket.__id}, will not retry again `
+        `${connector.endpoint} Connection decommisioned, closing websocket ${conn.websocket.__id}, will not retry again `
       );
 
       decommission(connector);
@@ -122,7 +122,10 @@ function checkConnection({ connector, reconnect, log }) {
     conn.websocket.send('ping');
   } else {
     if (connector.connected == undefined) {
-      logger.write(log, 'Setting connector status to FALSE because connector.connected is undefined');
+      logger.write(
+        log,
+        `${connector.endpoint} Setting connector status to FALSE because connector.connected is undefined`
+      );
       connector.connectStatus(false);
     }
 
@@ -148,18 +151,24 @@ function tryReconnect({ connector, endpoint }, { WebSocket, reconnect, log, verb
     return;
   }
 
-  if (conn.currentlyTryingWS && conn.currentlyTryingWS.readyState == wsCONNECTING) {
-    if (conn.currentlyTryingWS._waitForConnectCounter == WAIT_FOR_NEW_CONN_TICKS) {
-      if (verbose) {
-        logger.write(log, `${endpoint} took to long to reconnect, discarding ws`);
-      }
+  //logger.write(log, `${endpoint} CONN_TICK`);
+  //logger.write(log, `${endpoint} wsReadyState ${conn.currentlyTryingWS?.readyState}`);
 
-      conn.currentlyTryingWS._removeAllCallbacks();
-      conn.currentlyTryingWS.close();
-    } else {
+  if (conn.currentlyTryingWS?.readyState == wsCONNECTING) {
+    if (conn.currentlyTryingWS._waitForConnectCounter < WAIT_FOR_NEW_CONN_TICKS) {
+      //logger.write(log, `${endpoint} wsCONNECTING`);
       conn.currentlyTryingWS._waitForConnectCounter += 1;
       return;
     }
+
+    if (verbose || browser) {
+      logger.write(log, `${endpoint} Reconnect timeout, creating new ws`);
+    }
+
+    conn.currentlyTryingWS._removeAllCallbacks();
+    conn.currentlyTryingWS.close();
+  } else if (verbose || browser) {
+    logger.write(log, `${endpoint} Created new websocket`);
   }
 
   // so in case when device is online but websocket server is not running we usually
@@ -171,10 +180,6 @@ function tryReconnect({ connector, endpoint }, { WebSocket, reconnect, log, verb
 
   const ws = new WebSocket(endpoint);
   ws.__id = Math.random();
-
-  // if (verbose) {
-  //   logger.write(log, `Created new websocket ${conn.endpoint}`);
-  // }
 
   conn.currentlyTryingWS = ws;
   conn.currentlyTryingWS._waitForConnectCounter = 0;
@@ -193,15 +198,16 @@ function tryReconnect({ connector, endpoint }, { WebSocket, reconnect, log, verb
       return;
     }
 
-    if (verbose) {
-      logger.write(log, `websocket ${endpoint} connection opened`);
+    if (verbose || browser) {
+      logger.write(log, `${endpoint} Websocket open`);
     }
 
     conn.currentlyTryingWS = null;
     conn.checkTicker = 0;
-    addSocketListeners({ ws, connector, openCallback, reconnect }, { log, verbose });
 
+    addSocketListeners({ ws, connector, openCallback, reconnect }, { log, verbose });
     conn.websocket = ws;
+
     connector.connectStatus(true);
   };
 
@@ -220,8 +226,8 @@ function addSocketListeners({ ws, connector, openCallback, reconnect }, { log, v
   const conn = connector.connection;
 
   const errorCallback = event => {
-    //const msg = `websocket ${ws.__id} conn ${connector.connection.endpoint} error`;
-    const msg = `websocket ${connector.connection.endpoint} error`;
+    //const msg = `websocket ${ws.__id} conn ${connector.endpoint} error`;
+    const msg = `${connector.endpoint} Websocket error`;
     // whould not output normally since error events happen mostly on iphone.. didn't usually happen on desktop browsers or nodejs
     // this is also not standardized, it outputs nothing useful and we always get close event immediately after this error event
     console.log(msg);
@@ -230,7 +236,7 @@ function addSocketListeners({ ws, connector, openCallback, reconnect }, { log, v
   };
 
   const closeCallback = () => {
-    logger.write(log, `✖ Connection ${connector.connection.endpoint} closed`);
+    logger.write(log, `${connector.endpoint} ✖ Connection closed`);
 
     if (connector.decommissioned) {
       connector.connectStatus(false);
