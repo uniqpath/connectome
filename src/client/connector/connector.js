@@ -13,6 +13,7 @@ import { EventEmitter, listify, bufferToHex } from '../../utils/index.js';
 
 import RpcClient from '../rpc/client.js';
 import RPCTarget from '../rpc/RPCTarget.js';
+import errorCodes from '../rpc/mole/errorCodes.js';
 
 import { newKeypair, acceptKeypair } from '../../utils/crypto/index.js';
 
@@ -198,7 +199,7 @@ class Connector extends EventEmitter {
           this.connected.set(true);
 
           this.ready = true;
-          this.emit('ready');
+          this.emit('ready'); //⚠️ Note: when inside any client handler for ready we throw an error it gets caught in the following catch statement (along with Timeouts and other things)
         })
         .catch(e => {
           // if there was a timeout error our websocket MIGHT have already closed
@@ -217,21 +218,34 @@ class Connector extends EventEmitter {
             // and it was strange because new connector was ready and then this late error came
             // now we don't report handshake rpc errors on already closed websockets, they are probably no interesting at all
             // but still - watch this space for some time, maybe there are some small remaining voids in this logic
+            if (e.code == errorCodes.TIMEOUT) {
+              logger.write(
+                this.log,
+                `${this.endpoint} x Connector [ ${this.protocol} ] handshake error: "${e.message}"`
+              );
+
+              logger.write(
+                this.log,
+                `${this.endpoint} Connector dropping stale websocket after handshake error`
+              );
+
+              // ⚠️ todo: test with some rpc error (not timeout) .. (not sure how to achieve it)..
+              // not so urgent since we don't expect rpc errors except timeouts (we don't have bugs in remote handshake endpoints which would be passes here as rpc errors over the wire)
+              // and maybe implement a short delay here so that there is no immediate fast infinite reconnect loop
+              // with error thrown, socket terminated, error thrown again etc.
+              this.connection.terminate();
+            }
+          }
+
+          // we show all other errors even if websocket has already closed
+          if (e.code != errorCodes.TIMEOUT) {
             logger.write(
               this.log,
-              `${this.endpoint} x Connector [ ${this.protocol} ] handshake error: ${e.message}`
+              `${this.endpoint} x Connector [ ${this.protocol} ] on:ready error: "${e.stack}" — (will not try to reconnect, fix the error and reload this gui)`
             );
 
-            logger.write(
-              this.log,
-              `${this.endpoint} Connector dropping stale websocket after handshake error`
-            );
-
-            // ⚠️ todo: test with some rpc error (not timeout) .. (not sure how to achieve it)..
-            // not so urgent since we don't expect rpc errors except timeouts (we don't have bugs in remote handshake endpoints which would be passes here as rpc errors over the wire)
-            // and maybe implement a short delay here so that there is no immediate fast infinite reconnect loop
-            // with error thrown, socket terminated, error thrown again etc.
-            this.connection.terminate();
+            // TODO: ⚠️ what about errors coming from RPC ???, not critical because it could only matter in development but once we don't expect any remote exceptions
+            // we don't need to reconnect automatically in such cases.. if error in on:ready we expect frontend to be reloaded anyway
           }
         });
     } else {
