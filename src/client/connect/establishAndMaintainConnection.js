@@ -99,10 +99,7 @@ function checkConnection({ connector, reconnect, log }) {
 
   //if (verbose && (connectionIdle(conn) || connector.decommissioned)) {
   if (connectionIdle(conn) || connector.decommissioned) {
-    if (connectionIdle(conn)) {
-      connector.emit('inactive_connection');
-      logger.yellow(log, `${connector.endpoint} ✖ Terminated inactive connection`);
-    } else {
+    if (connector.decommissioned) {
       // decommissioned
       logger.yellow(
         log,
@@ -110,6 +107,10 @@ function checkConnection({ connector, reconnect, log }) {
       );
 
       decommission(connector);
+    } else {
+      // idle connection
+      connector.emit('inactive_connection');
+      logger.yellow(log, `${connector.endpoint} ✖ Terminated inactive connection`);
     }
 
     conn.terminate();
@@ -154,7 +155,7 @@ function tryReconnect({ connector, endpoint }, { WebSocket, reconnect, log, verb
   //logger.write(log, `${endpoint} CONN_TICK`);
   //logger.write(log, `${endpoint} wsReadyState ${conn.currentlyTryingWS?.readyState}`);
 
-  if (conn.currentlyTryingWS?.readyState == wsCONNECTING) {
+  if (conn.currentlyTryingWS && conn.currentlyTryingWS.readyState == wsCONNECTING) {
     if (conn.currentlyTryingWS._waitForConnectCounter < WAIT_FOR_NEW_CONN_TICKS) {
       //logger.write(log, `${endpoint} wsCONNECTING`);
       conn.currentlyTryingWS._waitForConnectCounter += 1;

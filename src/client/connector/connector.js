@@ -244,7 +244,9 @@ class Connector extends EventEmitter {
               `${this.endpoint} x Connector [ ${this.protocol} ] on:ready error: "${e.stack}" — (will not try to reconnect, fix the error and reload this gui)`
             );
 
-            // TODO: ⚠️ what about errors coming from RPC ???, not critical because it could only matter in development but once we don't expect any remote exceptions
+            // TODO: what about errors coming from RPC ? Like remote exceptions
+            // see -- rpc/mole/errorCodes.js --
+            // not critical or even that important because it could only matter in development but once we don't expect any remote exceptions
             // we don't need to reconnect automatically in such cases.. if error in on:ready we expect frontend to be reloaded anyway
           }
         });
