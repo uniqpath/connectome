@@ -1,11 +1,24 @@
+import inspect from 'browser-util-inspect';
+
 function doLogging(color, log, ...args) {
-  if (log == console.log) {
-    log(`${new Date().toLocaleString()} → ${args}`);
-  } else if (typeof log == 'function') {
-    log(args);
-  } else if (log) {
-    // dmt logger object
-    log.logOutput(color, { source: 'connectome' }, ...args);
+  try {
+    if (log == console.log) {
+      // by doing inspect in this way we get normal text in quotations: '...'
+      // 9/2/2022, 9:42:11 PM → 'Connector ws://192.168.0.16:7780 created'
+      // we remove them with 2x replace ...
+      log(
+        `${new Date().toLocaleString()} → ${inspect(...args)
+          .replace(/^'/, '')
+          .replace(/'$/, '')}`
+      );
+    } else if (typeof log == 'function') {
+      log(...args); // recently changed from args to ...args -- see if some other places need change
+    } else if (log) {
+      // dmt logger object
+      log.logOutput(color, { source: 'connectome' }, ...args);
+    }
+  } catch (e) {
+    console.log(e);
   }
 }
 

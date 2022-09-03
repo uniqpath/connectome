@@ -47,6 +47,7 @@
   "author": "davidhq",
   "license": "ISC",
   "dependencies": {
+    "browser-util-inspect": "^0.2.0",
     "bufferutil": "^4.0.2",
     "fast-json-patch": "^3.0.0-1",
     "kleur": "^4.1.5",
