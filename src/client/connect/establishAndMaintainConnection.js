@@ -38,7 +38,7 @@ function establishAndMaintainConnection(
     keypair,
     remotePubkey,
     rpcRequestTimeout,
-    decommissionable,
+    autoDecommission,
     log,
     verbose,
     tag,
@@ -56,7 +56,7 @@ function establishAndMaintainConnection(
     verbose,
     tag,
     log,
-    decommissionable,
+    autoDecommission,
     dummy
   });
 

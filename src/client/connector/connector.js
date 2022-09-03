@@ -37,7 +37,7 @@ class Connector extends EventEmitter {
     verbose = false,
     tag,
     log = console.log,
-    decommissionable = false,
+    autoDecommission = false,
     dummy
   } = {}) {
     super();
@@ -57,7 +57,7 @@ class Connector extends EventEmitter {
     this.verbose = verbose;
     this.tag = tag;
 
-    this.decommissionable = decommissionable;
+    this.autoDecommission = autoDecommission;
 
     this.sentCount = 0;
     this.receivedCount = 0;
@@ -290,7 +290,7 @@ class Connector extends EventEmitter {
   }
 
   checkForDecommission() {
-    if (!this.decommissionable) {
+    if (!this.autoDecommission) {
       return;
     }
 
@@ -307,8 +307,9 @@ class Connector extends EventEmitter {
 
     this.decommissionCheckCounter += 1;
 
+    // 12 x tick = around 10s
     if (this.decommissionCheckCounter > 12) {
-      // 12 x tick = around 10s
+      // and now the real check DECOMMISSION_INACTIVITY (1min)
       if (Date.now() - this.lastPongReceivedAt > DECOMMISSION_INACTIVITY) {
         logger.write(this.log, `Decommissioning connector ${this.endpoint} (long inactive)`);
 
@@ -319,9 +320,7 @@ class Connector extends EventEmitter {
   }
 
   decommission() {
-    if (this.decommissionable) {
-      this.decommissioned = true;
-    }
+    this.decommissioned = true;
   }
 
   remoteObject(handle) {

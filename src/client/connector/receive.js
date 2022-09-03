@@ -33,10 +33,7 @@ function wireReceive({ jsonData, encryptedData, rawMessage, wasEncrypted, connec
 
   if (connector.verbose && !wasEncrypted) {
     //logger.write(log);
-    logger.magenta(
-      log,
-      `Connector ${connector.endpoint} → Received message #${connector.receivedCount} ↴`
-    );
+    logger.magenta(log, `Connector ${connector.endpoint} → Received message #${connector.receivedCount} ↴`);
   }
 
   // 💡 unencrypted jsonData !

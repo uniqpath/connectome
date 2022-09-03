@@ -8,9 +8,9 @@ export default class ConnectDevice {
     this.connectToDeviceKey = connectToDeviceKey;
   }
 
-  createConnector({ host, decommissionable = false }) {
+  createConnector({ host, autoDecommission = false }) {
     const { port, protocol, rpcRequestTimeout, log, verbose, keypair } = this.mcs;
-    return connect({ host, port, protocol, keypair, rpcRequestTimeout, decommissionable, log, verbose });
+    return connect({ host, port, protocol, keypair, rpcRequestTimeout, autoDecommission, log, verbose });
   }
 
   getDeviceKey(state) {
@@ -76,7 +76,7 @@ export default class ConnectDevice {
   connectOtherDevice({ host, deviceKey }) {
     if (!this.mcs.connectors[deviceKey]) {
       // because of preconnect, not normal switching
-      const connector = this.createConnector({ host, decommissionable: true });
+      const connector = this.createConnector({ host, autoDecommission: true });
 
       connector.on('decommission', () => {
         delete this.mcs.connectors[deviceKey];
