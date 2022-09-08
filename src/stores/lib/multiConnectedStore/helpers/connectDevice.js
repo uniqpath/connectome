@@ -34,6 +34,10 @@ export default class ConnectDevice {
         state.nearbyDevices = [];
       }
 
+      if (!state.notifications) {
+        state.notifications = [];
+      }
+
       const deviceKey = this.getDeviceKey(state);
 
       if (deviceKey) {
@@ -41,6 +45,7 @@ export default class ConnectDevice {
           thisConnector.on('pong', () => {
             this.mcs.emit('pong', { deviceKey });
           });
+
           alreadySetupPong = true;
         }
 

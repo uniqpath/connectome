@@ -7,7 +7,11 @@ import ConnectDevice from './helpers/connectDevice.js';
 import Foreground from './helpers/foreground.js';
 import SwitchDevice from './helpers/switchDevice.js';
 
+import notificationsExpireAndCalculateRelativeTime from './helpers/notificationsExpireAndCalculateRelativeTime.js';
+
 //import logger from '../../../utils/logger/logger.js';
+
+const NOTIFICATIONS_CHECK_INTERVAL = 500;
 
 class MultiConnectedStore extends MergeStore {
   constructor({
@@ -56,6 +60,18 @@ class MultiConnectedStore extends MergeStore {
 
     // use from the outside as part of api as well, see dmt-mobile app
     this.localConnector = connectDevice.connectThisDevice({ host });
+
+    this._notificationsExpireAndCalculateRelativeTime();
+  }
+
+  _notificationsExpireAndCalculateRelativeTime() {
+    const { notifications } = this.get();
+
+    this.setMerge({ notifications: notificationsExpireAndCalculateRelativeTime(notifications) });
+
+    setTimeout(() => {
+      this._notificationsExpireAndCalculateRelativeTime();
+    }, NOTIFICATIONS_CHECK_INTERVAL);
   }
 
   signal(signal, data) {
