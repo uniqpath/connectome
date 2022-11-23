@@ -64,6 +64,10 @@ class MultiConnectedStore extends MergeStore {
     this._notificationsExpireAndCalculateRelativeTime();
   }
 
+  // we don't do the same for environment (sensors) and nearbuDevices
+  // we don't expire these at frontend because it's less critical
+  // and for nearbyDevices it's even better to keep...
+  // notifications are more critical and we need to expire at frontend when dmt-proc is down
   _notificationsExpireAndCalculateRelativeTime() {
     const { notifications } = this.get();
 

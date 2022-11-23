@@ -3,8 +3,8 @@ import path from 'path';
 
 // needed to pre-compile writeFileAtomic because usual transpilation with rollup failed because of __filename global variable
 // didn't succeed with rollup-inject and polyfills to fix that problem so simply added __filename global into pre-compile
-import writeFileAtomic from './lib/writeFileAtomic';
-import migrateState from './migrateState';
+import writeFileAtomic from './lib/writeFileAtomic.js';
+import migrateState from './migrateState.js';
 
 import compare from './lib/compare.js';
 

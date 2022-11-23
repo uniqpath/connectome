@@ -17,8 +17,8 @@ import errorCodes from '../rpc/mole/errorCodes.js';
 
 import { newKeypair, acceptKeypair } from '../../utils/crypto/index.js';
 
-import ProtocolState from './protocolState';
-import ConnectionState from './connectionState';
+import ProtocolState from './protocolState.js';
+import ConnectionState from './connectionState.js';
 
 const ADJUST_UNDEFINED_CONNECTION_STATUS_DELAY = 700; // was 700 for a long time, was ok, maybe a bit long, before that 300
 
@@ -118,6 +118,11 @@ class Connector extends EventEmitter {
         'Warning: trying to send signal over disconnected connector, this should be prevented by GUI'
       );
     }
+  }
+
+  // convenience method
+  userAction({ action, scope, payload }) {
+    this.signal('action', { action, scope, payload });
   }
 
   // pre-check for edge cases
