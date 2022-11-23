@@ -1,5 +1,8 @@
 export default clone;
 
+// LATER when browsers support check:
+// https://developer.mozilla.org/en-US/docs/Web/API/structuredClone
+// also in Connectome library
 function clone(obj) {
   if (typeof obj == 'function') {
     return obj;

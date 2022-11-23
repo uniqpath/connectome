@@ -1,4 +1,4 @@
-import Connectome from './connectome';
+import Connectome from './connectome/index.js';
 
 import { newKeypair } from '../utils/crypto/index.js';
 

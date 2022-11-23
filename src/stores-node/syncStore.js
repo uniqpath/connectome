@@ -4,14 +4,14 @@ import clone from './lib/clone.js';
 
 import KeyValueStore from './twoLevelMergeKVStore.js';
 
-import Slot from './slot';
+import Slot from './slot.js';
 
 import getDiff from './lib/getDiff.js';
 
-import removeUnsaved from './removeUnsaved';
-import muteAnnounce from './muteAnnounce';
+import removeUnsaved from './removeUnsaved.js';
+import muteAnnounce from './muteAnnounce.js';
 
-import { saveState, loadState } from './statePersist';
+import { saveState, loadState } from './statePersist.js';
 //const saveState = () => {};
 //const loadState = () => {};
 

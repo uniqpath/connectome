@@ -11,7 +11,7 @@ export default class SwitchDevice extends Emitter {
 
   switchState({ deviceKey, deviceName }) {
     this.mcs.setMerge({ activeDeviceKey: deviceKey });
-    const { state, connected } = this.mcs.connectors[deviceKey];
+    const { state, connected } = this.mcs.connectors[deviceKey]; //⚠️ z-hub -- right side of assignment cannot be destructured... from mobile app, when setting up dnevna vs hub
     this.foreground.set(state.get(), { optimisticDeviceName: deviceName });
     this.mcs.connected.set(connected.get());
   }

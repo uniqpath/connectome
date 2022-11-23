@@ -1,6 +1,6 @@
 import { EventEmitter } from '../../utils/index.js';
 
-//import ProtocolStore from '../../stores/back/protocolStore';
+//import ProtocolStore from '../../stores/back/protocolStore.js';
 
 class ChannelList extends EventEmitter {
   constructor({ protocol }) {
