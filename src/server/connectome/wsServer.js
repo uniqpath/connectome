@@ -118,7 +118,7 @@ class WsServer extends EventEmitter {
       }
 
       ws.isAlive = false;
-      ws.ping(noop); // probably does notthing, we don't handle this on frontend, no actual need
+      ws.ping(noop); // probably does nothing, we don't handle this on frontend, no actual need
     });
 
     setTimeout(() => {
