@@ -1,15 +1,15 @@
-const colors = require('colors');
+const colors = require('chalk');
 const { newKeypair } = require('./crypto/index.js');
 const { stores } = require('./stores/index.js');
 const { ConnectionsAcceptor } = require('./server/index.js');
 
-const store = new stores.proc.MirroringStore({});
+const store = new stores.ProtocolStore({});
 
 function onConnect({ channel, store }) {
   console.log('New example/gui connection');
 
-  channel.on('action', ({ action, namespace, payload }) => {
-    if (namespace == 'svelte' && action == 'set_component') {
+  channel.on('action', ({ action, scope, payload }) => {
+    if (scope == 'svelte' && action == 'set_component') {
       const { compiledComponent } = payload;
       store.set({ compiledComponent });
     }
@@ -21,20 +21,19 @@ function start({ port }) {
   const keypair = newKeypair();
   const acceptor = new ConnectionsAcceptor({ port, keypair });
 
-  acceptor.on('protocol_added', ({ protocol, lane }) => {
-    console.log(`💡 Connectome protocol ${colors.cyan(protocol)}/${colors.cyan(lane)} ready.`);
+  acceptor.on('protocol_added', ({ protocol }) => {
+    console.log(`💡 Connectome protocol ${colors.cyan(protocol)} ready.`);
   });
 
   // add our example protocol
   const protocol = 'example';
-  const lane = 'gui';
-  const channelList = acceptor.registerProtocol({
+
+  const channels = acceptor.registerProtocol({
     protocol,
-    lane,
     onConnect: ({ channel }) => onConnect({ channel, store })
   });
 
-  store.mirror(channelList);
+  store.sync(channels);
 
   // start websocket server
   acceptor.start();

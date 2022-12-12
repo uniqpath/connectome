@@ -1,3 +1,5 @@
+//import colors from 'kleur';
+
 import nacl from 'tweetnacl';
 import naclutil from 'tweetnacl-util';
 nacl.util = naclutil;
@@ -5,7 +7,23 @@ nacl.util = naclutil;
 import { isObject, addHeader } from '../../server/channel/sendHelpers.js';
 import { integerToByteArray } from '../../utils/index.js';
 
+import logger from '../../utils/logger/logger.js';
+
 function send({ data, connector }) {
+  const { log } = connector;
+
+  // const log = (...opts) => {
+  //   if (opts.length == 0) {
+  //     connector.logger.write(log);
+  //   } else {
+  //     connector.logger.write(log,
+  //       colors.magenta('📡'),
+  //       colors.gray(connector.tag || connector.endpoint),
+  //       colors.magenta(...opts)
+  //     );
+  //   }
+  // };
+
   if (isObject(data)) {
     data = JSON.stringify(data);
   }
@@ -26,23 +44,29 @@ function send({ data, connector }) {
       const encryptedMessage = nacl.secretbox(encodedMessage, nonce, connector.sharedSecret);
 
       if (connector.verbose) {
-        console.log();
-        console.log(`Connector → Sending encrypted message #${connector.sentCount} @ ${connector.address}:`);
-        console.log(data);
+        //logger.write(log); // empty line
+        logger.green(
+          log,
+          `Connector ${connector.endpoint} → Sending encrypted message #${connector.sentCount} ↴`
+        );
+        logger.gray(log, data);
       }
 
       connector.connection.websocket.send(encryptedMessage);
     } else {
       if (connector.verbose) {
-        console.log();
-        console.log(`Connector → Sending message #${connector.sentCount} @ ${connector.address}:`);
-        console.log(data);
+        //logger.write(log); // empty line
+        logger.green(
+          log,
+          `Connector ${connector.endpoint} → Sending message #${connector.sentCount} ↴`
+        );
+        logger.gray(log, data);
       }
 
       connector.connection.websocket.send(data);
     }
   } else {
-    console.log(`⚠️ Warning: "${data}" was not sent because connector is not ready`);
+    logger.red(log, `⚠️ Warning: "${data}" was not sent because connector is not ready`);
   }
 }
 

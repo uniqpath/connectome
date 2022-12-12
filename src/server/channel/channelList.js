@@ -1,13 +1,19 @@
 import { EventEmitter } from '../../utils/index.js';
 
+//import ProtocolStore from '../../stores/back/protocolStore.js';
+
 class ChannelList extends EventEmitter {
-  constructor({ protocol, lane }) {
+  constructor({ protocol }) {
     super();
 
     this.protocol = protocol;
-    this.lane = lane;
 
     this.channels = [];
+
+    // // latent means that it won't send anything over the channels until we first use it (set the state)
+    // // this allows for outside stores to mirror into channel list which default ProtocolStore (channels.state) remains unused
+    // this.state = new ProtocolStore({}, { latent: true });
+    // this.state.sync(this);
 
     process.nextTick(() => {
       this.reportStatus();
@@ -44,21 +50,21 @@ class ChannelList extends EventEmitter {
       channel
         .remoteObject(remoteObjectHandle)
         .call(method, args)
-        .catch((e) => {
+        .catch(e => {
           console.log(e);
         });
     }
   }
 
   multiCall(remoteObjectHandle, method, args) {
-    const promises = this.channels.map((channel) =>
+    const promises = this.channels.map(channel =>
       channel.remoteObject(remoteObjectHandle).call(method, args)
     );
     return Promise.all(promises);
   }
 
   reportStatus() {
-    const connList = this.channels.map((channel) => {
+    const connList = this.channels.map(channel => {
       const result = {
         ip: channel.remoteIp(),
         address: channel.remoteAddress(),
@@ -69,6 +75,20 @@ class ChannelList extends EventEmitter {
     });
 
     this.emit('status', { connList });
+  }
+
+  [Symbol.iterator]() {
+    let counter = 0;
+    return {
+      next: () => {
+        if (counter < this.channels.length) {
+          const result = { value: this.channels[counter], done: false };
+          counter++;
+          return result;
+        }
+        return { done: true };
+      }
+    };
   }
 }
 

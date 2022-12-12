@@ -66,6 +66,11 @@
     "balanced-match" "^1.0.0"
     "concat-map" "0.0.1"
 
+"browser-util-inspect@^0.2.0":
+  "integrity" "sha512-R7WvAj0p9FtwS2Jbtc1HUd1+YZdeb5EEqjBSbbOK3owJtW1viWyJDeTPy43QZ7bZ8POtb1yMv++h844486jMsQ=="
+  "resolved" "https://registry.npmjs.org/browser-util-inspect/-/browser-util-inspect-0.2.0.tgz"
+  "version" "0.2.0"
+
 "bufferutil@^4.0.2":
   "integrity" "sha512-AtnG3W6M8B2n4xDQ5R+70EXvOpnXsFYg/AK2yTZd+HQ/oxAdz+GI+DvjmhBw3L0ole+LJ0ngqY4JMbDzkfNzhA=="
   "resolved" "https://registry.npmjs.org/bufferutil/-/bufferutil-4.0.2.tgz"
@@ -77,11 +82,6 @@
   "integrity" "sha512-k0KL0aWZuBt2lrxrcASWDfwOLMnodeQjodT/1SxEQAXsHANgo6ZC/VEaSEHCXt7aSTZ4/4H5LKa+tBXmW7Vtvw=="
   "resolved" "https://registry.npmjs.org/builtin-modules/-/builtin-modules-3.1.0.tgz"
   "version" "3.1.0"
-
-"colors@^1.4.0":
-  "integrity" "sha512-a+UqTh4kgZg/SlGvfbzDHpgRu7AAQOmmqRHJnxhRZICKFUT91brVhNNt58CMWU9PsBbv3PDCZUHbVxuDiH2mtA=="
-  "resolved" "https://registry.npmjs.org/colors/-/colors-1.4.0.tgz"
-  "version" "1.4.0"
 
 "commondir@^1.0.1":
   "integrity" "sha1-3dgA2gxmEnOTzKWVDqloo6rxJTs="
@@ -179,6 +179,11 @@
   dependencies:
     "@types/estree" "*"
 
+"kleur@^4.1.5":
+  "integrity" "sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ=="
+  "resolved" "https://registry.npmjs.org/kleur/-/kleur-4.1.5.tgz"
+  "version" "4.1.5"
+
 "magic-string@^0.25.7":
   "integrity" "sha512-4CrMT5DOHTDk4HYDlzmwu4FVCcIYI8gauveasrdCu2IKIFOJ3f0v/8MDGJCDL9oD2ppz/Av1b0Nj345H9M+XIA=="
   "resolved" "https://registry.npmjs.org/magic-string/-/magic-string-0.25.7.tgz"
@@ -242,8 +247,6 @@
   "integrity" "sha512-RpayhPTe4Gu/uFGCmk7Gp5Z9Qic2VsqZ040G+KZZvsZYdcuWaJg678JeDJJvJeEQXminu24a2au+y92CUWVd+w=="
   "resolved" "https://registry.npmjs.org/rollup/-/rollup-2.33.3.tgz"
   "version" "2.33.3"
-  dependencies:
-    "fsevents" "~2.1.2"
   optionalDependencies:
     "fsevents" "~2.1.2"
 
@@ -274,7 +277,7 @@
   "resolved" "https://registry.npmjs.org/wrappy/-/wrappy-1.0.2.tgz"
   "version" "1.0.2"
 
-"ws@^7.2.3":
-  "integrity" "sha512-kyFwXuV/5ymf+IXhS6f0+eAFvydbaBW3zjpT6hUdAh/hbVjTIB5EHBGi0bPoCLSK2wcuz3BrEkB9LrYv1Nm4NQ=="
-  "resolved" "https://registry.npmjs.org/ws/-/ws-7.4.0.tgz"
-  "version" "7.4.0"
+"ws@^7.4.5":
+  "integrity" "sha512-xzyu3hFvomRfXKH8vOFMU3OguG6oOvhXMo3xsGy3xWExqaM2dxBbVxuD99O7m3ZUFMvvscsZDqxfgMaRr/Nr1g=="
+  "resolved" "https://registry.npmjs.org/ws/-/ws-7.4.5.tgz"
+  "version" "7.4.5"

@@ -1,4 +1,4 @@
-export { default as connectBrowser } from './connect/connectBrowser.js';
+export { default as connect } from './connect/connectBrowser.js';
 // maybe rename connectBrowser as connect since there will be only one 'connect' in each platform.
 
 export { default as ConnectorPool } from './connectorPool/connectorPool.js';

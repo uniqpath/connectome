@@ -70,6 +70,8 @@ class MoleServer {
     } else {
       this.currentTransport = transport;
 
+      //console.log(`Method call: ${methodName}`);
+
       try {
         const result = await this.methods[methodName].apply(this.methods, params);
 

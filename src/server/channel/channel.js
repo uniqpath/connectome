@@ -7,26 +7,76 @@ import RpcClient from '../../client/rpc/client.js';
 
 import RPCTarget from '../../client/rpc/RPCTarget.js';
 
+import WritableStore from '../../stores/lib/helperStores/writableStore.js';
+
 class Channel extends EventEmitter {
-  constructor(ws, { rpcRequestTimeout, verbose = false }) {
+  constructor(ws, { rpcRequestTimeout, log = console.log, verbose = false }) {
     super();
     this.ws = ws;
+
+    this.log = log;
     this.verbose = verbose;
 
-    this.protocol = ws.protocol;
+    //this.protocol = ws.protocol;
 
     this.reverseRpcClient = new RpcClient(this, rpcRequestTimeout);
 
-    ws.on('close', () => {
-      this.emit('disconnect');
-    });
-
     this.sentCount = 0;
     this.receivedCount = 0;
+
+    this.stateFields = {};
+    this.stateFieldsSubscriptions = [];
+
+    ws.on('close', () => {
+      Object.values(this.stateFieldsSubscriptions).forEach(unsubscribe => unsubscribe());
+      this.emit('disconnect');
+    });
   }
 
-  setLane(lane) {
-    this.lane = lane;
+  // Usage:
+  //
+  // per-channel (connection) state
+  //
+  // state('name', state) OR
+  // state('name').set(state)
+  //
+  // we don't do diffing on clientside here, no need and it would be extemely hard to maintain in sync
+  // this is for syncing per-state smaller state
+  //
+  // however when setting state state on backend we do check if there was any diff and only then send the entire state over
+  //
+  // always change state state in response to some frontend action through that channel..
+  // not through timer or something like this.. channel may be long dead
+  state(name, _state) {
+    if (!this.stateFields[name]) {
+      this.stateFields[name] = new WritableStore();
+
+      let first = true;
+      const unsubscribe = this.stateFields[name].subscribe(state => {
+        // after first subscribing we will get empty state
+        // and we don't need to send this over the channel
+        if (!first) {
+          this.send({ stateField: { name, state } });
+        }
+        first = false;
+      });
+
+      this.stateFieldsSubscriptions.push(unsubscribe);
+    }
+
+    if (_state) {
+      this.stateFields[name].set(_state);
+    }
+
+    return this.stateFields[name];
+  }
+
+  clearState(...names) {
+    names.forEach(name => this.state(name).set(undefined));
+  }
+
+  setProtocol(protocol) {
+    this.protocol = protocol;
   }
 
   setSharedSecret(sharedSecret) {
@@ -35,7 +85,9 @@ class Channel extends EventEmitter {
 
   isReady({ warn = true } = {}) {
     if (warn) {
-      console.log("LIB USAGE WARNING ⚠️  we normally don't have to check if channel is ready because we already get it prepared");
+      console.log(
+        "LIB USAGE WARNING ⚠️  we normally don't have to check if channel is ready because we already get it prepared"
+      );
       console.log('If you really need to do this, call isReady like this: isReady({ warn: false })');
     }
     return !!this.sharedSecret;
@@ -70,9 +122,9 @@ class Channel extends EventEmitter {
   // 💡 we have to send a "special message" { state: {…} } to sync state to frontend ('other side')
   // 💡 { state: {…} } agreement is part of lower level simple connectome protocol along with { diff: { … }}, { action: { … }} (in other direction) and some others
   // 💡 we document this SOON
-  sendState(state) {
-    this.send({ state });
-  }
+  // sendState(state) {
+  //   this.send({ state });
+  // }
 
   messageReceived(message) {
     receive({ message, channel: this });

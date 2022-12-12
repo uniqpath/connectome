@@ -4,53 +4,26 @@ nacl.util = naclutil;
 
 import { integerToByteArray } from '../../utils/index.js';
 
-function messageReceived({ message, channel }) {
-  channel.lastMessageAt = Date.now();
+import logger from '../../utils/logger/logger.js';
 
-  const nonce = new Uint8Array(integerToByteArray(2 * channel.receivedCount, 24));
-
-  if (channel.verbose) {
-    console.log(`Channel → Received message #${channel.receivedCount} @ ${channel.remoteAddress()}:`);
-  }
-
-  if (channel.sharedSecret) {
-    if (channel.verbose == 'extra') {
-      console.log('Received bytes:');
-      console.log(message);
-      console.log(`Decrypting with shared secret ${channel.sharedSecret}...`);
-    }
-
-    try {
-      const _decryptedMessage = nacl.secretbox.open(message, nonce, channel.sharedSecret);
-
-      const flag = _decryptedMessage[0];
-      const decryptedMessage = _decryptedMessage.subarray(1);
-
-      const decodedMessage = nacl.util.encodeUTF8(decryptedMessage);
-      message = decodedMessage;
-    } catch (e) {
-      throw new Error(`${message} -- ${channel.protocol} -- ${e.toString()}`);
-    }
-  }
+function handleMessage(channel, message) {
+  const { log } = channel;
 
   let jsonData;
 
+  // we implemented this because all messages should be json
+  // but there was a bug when we sent some message before connection ready
+  // and message snuck in just before the last step (finalizeHandshake
+  // process expected unencrypted data but message was received
+  // just as finalize handshake was executing and it was already encrypted since this.sharedSecret was set in
+  // connector diffieHellman immediately after return from exchangePubkeys
   try {
     jsonData = JSON.parse(message);
   } catch (e) {
-    console.log('JSON Error Message Received ---');
-    console.log(message);
-    console.log('---');
-    return;
-  }
-
-  if (channel.verbose) {
-    if (channel.sharedSecret) {
-      console.log('Decrypted message:');
-    }
-
-    console.log(message);
-    console.log();
+    logger.red(log, 'Error: Message should be json !');
+    logger.red(log, message);
+    logger.red(log, message.toString());
+    throw e; // let program crash
   }
 
   if (jsonData.jsonrpc) {
@@ -64,7 +37,86 @@ function messageReceived({ message, channel }) {
   } else if (jsonData.signal) {
     channel.emit(jsonData.signal, jsonData.data);
   } else {
-    channel.emit('message', message);
+    channel.emit('receive', message); // renamed this from 'message' recently...
+    // we have signal named 'message' somewhere.. this handler is not even utilized anywhere at the moment..
+    // and connector also has 'receive' instead of 'message' ... todo: think over
+  }
+}
+
+function messageReceived({ message, channel }) {
+  const { log } = channel;
+
+  channel.lastMessageAt = Date.now();
+
+  const nonce = new Uint8Array(integerToByteArray(2 * channel.receivedCount, 24));
+
+  if (channel.verbose) {
+    logger.write(log, `Channel ${channel.remoteAddress()} → Received message #${channel.receivedCount} ↴`);
+  }
+
+  //if (channel.sharedSecret) {
+  // if (channel.sharedSecret && channel.verbose == 'extra') {
+  //   logger.write(log, 'Received bytes:');
+  //   logger.write(log, message);
+  //   logger.write(log, `Decrypting with shared secret ${channel.sharedSecret}...`);
+  // }
+
+  let decodedMessage;
+
+  try {
+    // handshake phase
+    if (!channel.sharedSecret) {
+      //const jsonData = JSON.parse(message);
+      handleMessage(channel, message);
+      return;
+    }
+
+    // subsequent encrypted communication
+    const _decryptedMessage = nacl.secretbox.open(message, nonce, channel.sharedSecret);
+
+    const flag = _decryptedMessage[0];
+    const decryptedMessage = _decryptedMessage.subarray(1);
+
+    if (channel.verbose) {
+      logger.write(log, `decryptedMessage: ${decryptedMessage}`);
+      //logger.write(log, `decryptedMessage length: ${decryptedMessage.length}`);
+    }
+
+    // text (json)
+    if (flag == 1) {
+      decodedMessage = nacl.util.encodeUTF8(decryptedMessage);
+
+      //const jsonData = JSON.parse(decodedMessage);
+
+      // todo: channel.sharedSecret will never be true here... move/ dduplicate
+      // if (channel.verbose) {
+      //   if (channel.sharedSecret) {
+      //     logger.write(log, 'Decrypted message:');
+      //   }
+
+      //   logger.write(log, message);
+      //   logger.write(log, );
+      // }
+
+      if (channel.verbose) {
+        logger.write(log, `Message: ${decodedMessage}`);
+        //logger.write(log, `Message length: ${decodedMessage.length}`);
+      }
+
+      handleMessage(channel, decodedMessage);
+    } else {
+      // binary
+      channel.emit('receive_binary', decryptedMessage);
+    }
+  } catch (e) {
+    // we repackage the error so we can include the channel message that triggered the problem
+    throw new Error(
+      `${e.toString()} \n-- Protocol ${
+        channel.protocol
+      } received channel message: ${decodedMessage} \n-- Stacktrace: ${
+        e.stack
+      }\n------ ↑ original stacktrace ------ `
+    );
   }
 }
 
