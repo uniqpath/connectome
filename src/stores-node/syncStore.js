@@ -1,4 +1,4 @@
-import { EventEmitter, stopwatch } from '../utils/index.js';
+import { EventEmitter, stopwatchAdv } from '../utils/index.js';
 
 import clone from './lib/clone.js';
 
@@ -40,7 +40,8 @@ export default class SyncStore extends EventEmitter {
       schemaVersion,
       schemaMigrations = [],
       noRecovery = false,
-      omitStateFn = state => state
+      omitStateFn = state => state,
+      log
     } = {}
   ) {
     super();
@@ -50,6 +51,7 @@ export default class SyncStore extends EventEmitter {
     this.beforeLoadAndSave = beforeLoadAndSave;
     this.schemaVersion = schemaVersion;
     this.omitStateFn = omitStateFn;
+    this._log = log;
 
     //this.lastAnnouncedState = clone(initialState); // alternative to below...
 
@@ -71,6 +73,12 @@ export default class SyncStore extends EventEmitter {
     this.stateChangesCount = 0;
 
     this.subscriptions = [];
+  }
+
+  log(...args) {
+    if (this._log) {
+      this._log.write(...args);
+    }
   }
 
   sync(channelList) {

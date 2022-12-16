@@ -122,7 +122,7 @@ class Connector extends EventEmitter {
 
   // convenience method
   userAction({ action, scope, payload }) {
-    this.signal('action', { action, scope, payload });
+    this.signal('__action', { action, scope, payload });
   }
 
   // pre-check for edge cases

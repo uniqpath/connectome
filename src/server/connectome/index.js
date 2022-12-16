@@ -53,7 +53,12 @@ export default class Connectome extends ReadableStore {
         // connectome is not aware of program instance but we can pass it in to each onConnect handler like this
         const onConnectWrap = ({ channel }) => {
           // route all 'action' signals to be program user actions
-          // to be handled with program.onUserAction(...)
+          // to be handled with connectome.onUserAction(...)
+          channel.on('__action', ({ action, payload, scope }) => {
+            userAction({ dmtID, protocol, scope, action, payload });
+          });
+
+          // ⚠️⚠️⚠️ REMOVE THIS AFTER manual sending of actions is fixed everywhere
           channel.on('action', ({ action, payload, scope }) => {
             userAction({ dmtID, protocol, scope, action, payload });
           });
@@ -71,7 +76,7 @@ export default class Connectome extends ReadableStore {
         const handle = this.constructOldProtocolHandle(dmtID, _protocol);
 
         const onUserAction = (scopeAndAction, handler) => {
-          // option to use: program.onUserAction(({ scope, action, payload }) => { ... })
+          // option to use: connectome.onUserAction(({ scope, action, payload }) => { ... })
           if (!handler && typeof scopeAndAction == 'function') {
             handler = scopeAndAction;
             scopeAndAction = '';
