@@ -8,6 +8,8 @@ import migrateState from './migrateState.js';
 
 import compare from './lib/compare.js';
 
+//import { stopwatchAdv } from '../utils/index.js';
+
 function dropState({ strState, stateFilePath, noRecovery }) {
   if (!noRecovery && strState?.trim() != '') {
     const extname = path.extname(stateFilePath);

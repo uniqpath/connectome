@@ -238,11 +238,6 @@
     "is-core-module" "^2.1.0"
     "path-parse" "^1.0.6"
 
-"rfc6902@^4.0.1":
-  "integrity" "sha512-RZOewbzE7AGAAPxxoTg137y4rCzA9w+5F9O+j+JdwnXH9uNNIpDPf8eH4sIViqgjfvOak+nlBRiy17TPDn+PLA=="
-  "resolved" "https://registry.npmjs.org/rfc6902/-/rfc6902-4.0.1.tgz"
-  "version" "4.0.1"
-
 "rollup@^2.33.3":
   "integrity" "sha512-RpayhPTe4Gu/uFGCmk7Gp5Z9Qic2VsqZ040G+KZZvsZYdcuWaJg678JeDJJvJeEQXminu24a2au+y92CUWVd+w=="
   "resolved" "https://registry.npmjs.org/rollup/-/rollup-2.33.3.tgz"

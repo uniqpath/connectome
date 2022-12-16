@@ -1,4 +1,5 @@
 import stopwatch from './stopwatch/stopwatch.js';
+import stopwatchAdv from './stopwatch/stopwatchAdv.js';
 import EventEmitter from './emitter/index.js';
 
 function isBrowser() {
@@ -41,6 +42,7 @@ function integerToByteArray(long, arrayLen = 8) {
 
 export {
   stopwatch,
+  stopwatchAdv,
   EventEmitter,
   isBrowser,
   isNodeJs,
