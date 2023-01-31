@@ -137,6 +137,7 @@ export default class SyncStore extends EventEmitter {
   save() {
     if (this.stateFilePath) {
       const state = removeUnsaved(clone(this.state()), this.unsavedSlots, this.beforeLoadAndSave);
+      this.log('removeUnsaved(clone(this.state()), this.unsavedSlots, this.beforeLoadAndSave)');
       const savedState = saveState({
         stateFilePath: this.stateFilePath,
         schemaVersion: this.schemaVersion,
@@ -145,44 +146,66 @@ export default class SyncStore extends EventEmitter {
       });
 
       if (savedState) {
+        this.log('state did save');
         this.lastSavedState = savedState;
+      } else {
+        this.log('state did not save');
       }
     }
   }
 
-  announceStateChange(announce = true, skipDiffing = false) {
+  // skiDiffing -- not in use currently since we made diffing fast in all cases
+  //announceStateChange(announce = true, skipDiffing = false) {
+  announceStateChange(announce = true) {
     if (!announce) {
       return;
     }
 
+    this.log('--- announceStateChange ---');
+
     const remoteState = this.omitAndCloneState();
 
-    if (skipDiffing) {
-      this.sendRemote({ state: remoteState });
-      this.tagState({ state: remoteState });
-      return;
-    }
+    // if (skipDiffing) {
+    //   this.sendRemote({ state: remoteState });
+    //   this.tagState({ state: remoteState });
+    //   return;
+    // }
 
-    //const start = stopwatch.start();
+    // const start = stopwatchAdv.start();
+
+    this.log('after clone');
 
     const diff = getDiff(this.lastAnnouncedState, muteAnnounce(this.slots, remoteState));
 
-    //const duration = stopwatch.stop(start);
-    //console.log(`Diffing time: ${duration}`);
+    this.log('after diff clone');
+
+    // const { duration, prettyTime } = stopwatchAdv.stop(start);
+
+    // // report diffs that are more than 2ms
+    // if (duration / 1e6 > 2) {
+    //   console.log(`Diffing time: ${prettyTime}`);
+    // }
 
     if (diff) {
       // console.log(diff);
+      // console.log(`Diff size: ${diff.length}`);
+      // console.log();
+
       //this.emit('diff', diff)
       this.sendRemote({ diff });
+      this.log('after send remote');
       this.stateChangesCount += 1;
       this.tagState({ state: remoteState });
+      this.log('after tag state');
     }
   }
 
   tagState({ state }) {
     this.save();
+    this.log('after save');
     this.lastAnnouncedState = state;
     this.pushStateToLocalSubscribers();
+    this.log('after pushStateToLocalSubscribers');
   }
 
   subscribe(handler) {

@@ -34,14 +34,15 @@ export default class Connectome extends ReadableStore {
   }
 
   developer(dmtID) {
-    const userAction = ({ dmtID, protocol, scope, action, payload }) => {
+    const userAction = ({ dmtID, protocol, scope, action, payload, channel }) => {
       const handle = this.constructOldProtocolHandle(dmtID, protocol);
 
       const a = (this.userActionHandlers || {})[handle] || {};
       for (const [scopeAndAction, handlers] of Object.entries(a)) {
         const [_scope, _action] = scopeAndAction.split('/');
         if (!_scope || (_scope == scope && (!_action || _action == action))) {
-          handlers.forEach(handler => handler({ scope, action, payload }));
+          // channel is used rarely from inside the handler.. but sometimes it is (tv volume example..)
+          handlers.forEach(handler => handler({ scope, action, payload, channel }));
         }
       }
     };
@@ -55,12 +56,14 @@ export default class Connectome extends ReadableStore {
           // route all 'action' signals to be program user actions
           // to be handled with connectome.onUserAction(...)
           channel.on('__action', ({ action, payload, scope }) => {
-            userAction({ dmtID, protocol, scope, action, payload });
+            // channel is used rarely from inside the handler.. but sometimes it is (tv volume example..)
+            userAction({ dmtID, protocol, scope, action, payload, channel });
           });
 
           // ⚠️⚠️⚠️ REMOVE THIS AFTER manual sending of actions is fixed everywhere
           channel.on('action', ({ action, payload, scope }) => {
-            userAction({ dmtID, protocol, scope, action, payload });
+            // channel is used rarely from inside the handler.. but sometimes it is (tv volume example..)
+            userAction({ dmtID, protocol, scope, action, payload, channel });
           });
 
           onConnect({ program: this, channel });
