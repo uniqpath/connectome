@@ -237,7 +237,7 @@ function addSocketListeners({ ws, connector, openCallback, reconnect }, { log, v
   };
 
   const closeCallback = () => {
-    logger.write(log, `${connector.endpoint} ✖ Connection closed`);
+    logger.write(log, `${connector.endpoint} ✖ Connection [ ${connector.protocol} ] closed`);
 
     if (connector.decommissioned) {
       connector.connectStatus(false);

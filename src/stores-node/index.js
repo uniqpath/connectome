@@ -6,4 +6,8 @@ import SyncStore from './syncStore.js';
 // so this only helps although MCS is not usually used from node
 import MultiConnectedStore from '../stores/lib/multiConnectedStore/multiConnectedStore.js';
 
-export { SyncStore, MultiConnectedStore };
+function isEmptyObject(obj) {
+  return typeof obj === 'object' && Object.keys(obj).length === 0;
+}
+
+export { SyncStore, MultiConnectedStore, isEmptyObject };
