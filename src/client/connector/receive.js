@@ -61,11 +61,25 @@ function wireReceive({ jsonData, encryptedData, rawMessage, wasEncrypted, connec
     // 💡 encryptedJson data!!
     if (connector.verbose == 'extra') {
       logger.magenta(log, `Connector ${connector.endpoint} received bytes ↴`);
-      logger.gray(log, encryptedData);
-      logger.magenta(
+      logger.cyan(log, encryptedData);
+      logger.green(log, JSON.stringify(encryptedData));
+      logger.gray(
         log,
         `Connector ${connector.endpoint} decrypting with shared secret ${connector.sharedSecret}...`
       );
+      logger.cyan(log, JSON.stringify(connector.sharedSecret));
+    }
+
+    if (!connector.sharedSecret) {
+      // we had this problem before -- zurich wifi -- when terminating inactive websocket
+      // it didn't actually close in time .. we set connector to disconnected and deleted sharedSecret
+      // but then a stray message json rpc return from hadshake arrived after that and couldn't be decrypted
+      // because it shouldn't have arrived in the first place after websocket was supposedly closed
+      // solution: __closed flag on all websockets.. it is set to true at the same time as calling close()
+      // and then any messages still coming over the wire on such closed websockets are dropped
+      // we hope websocket is eventually closed though (?)
+      // see messageCallback in establishAndMaintainConnection, this was fixed there
+      logger.red(log, `Connector ${connector.endpoint} missing sharedSecret - should not happen...`);
     }
 
     const _decryptedMessage = nacl.secretbox.open(encryptedData, nonce, connector.sharedSecret);
@@ -77,7 +91,7 @@ function wireReceive({ jsonData, encryptedData, rawMessage, wasEncrypted, connec
       const decodedMessage = nacl.util.encodeUTF8(decryptedMessage);
 
       if (connector.verbose) {
-        logger.write(log, `Received message: ${decodedMessage}`);
+        logger.yellow(log, `Connector ${connector.endpoint} received message: ${decodedMessage}`);
       }
 
       try {
@@ -123,6 +137,10 @@ function wireReceive({ jsonData, encryptedData, rawMessage, wasEncrypted, connec
         throw e;
       }
     } else {
+      if (connector.verbose) {
+        logger.yellow(log, `Connector ${connector.endpoint} received binary data`);
+      }
+
       //const binaryData = decryptedMessage;
       // const sessionId = Buffer.from(binaryData.buffer, binaryData.byteOffset, 64).toString();
       // const binaryPayload = Buffer.from(binaryData.buffer, binaryData.byteOffset + 64);

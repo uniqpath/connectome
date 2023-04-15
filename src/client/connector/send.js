@@ -60,7 +60,7 @@ function send({ data, connector }) {
           log,
           `Connector ${connector.endpoint} → Sending message #${connector.sentCount} ↴`
         );
-        logger.gray(log, data);
+        logger.cyan(log, data);
       }
 
       connector.connection.websocket.send(data);

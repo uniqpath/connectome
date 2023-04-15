@@ -67,7 +67,8 @@ function establishAndMaintainConnection(
   connector.connection = {
     terminate() {
       this.websocket._removeAllCallbacks();
-      this.websocket.close();
+      this.websocket.__closed = true;
+      this.websocket.close(); // might take some time to actually close, we can get stray messages through that websocket
       //connector.connectStatus(undefined);
       connector.connectStatus(false);
       reconnect();
@@ -103,14 +104,14 @@ function checkConnection({ connector, reconnect, log }) {
       // decommissioned
       logger.yellow(
         log,
-        `${connector.endpoint} Connection decommisioned, closing websocket ${conn.websocket.__id}, will not retry again `
+        `${connector.endpoint} Connection decommisioned, closing websocket #${conn.websocket.__id}, will not retry again `
       );
 
       decommission(connector);
     } else {
       // idle connection
       connector.emit('inactive_connection');
-      logger.yellow(log, `${connector.endpoint} ✖ Terminated inactive connection`);
+      logger.yellow(log, `${connector.endpoint} ✖ Terminated inactive connection #${conn.websocket.__id}`);
     }
 
     conn.terminate();
@@ -152,6 +153,8 @@ function tryReconnect({ connector, endpoint }, { WebSocket, reconnect, log, verb
     return;
   }
 
+  const wsId = Math.round(10 ** 5 * Math.random()).toString();
+
   //logger.write(log, `${endpoint} CONN_TICK`);
   //logger.write(log, `${endpoint} wsReadyState ${conn.currentlyTryingWS?.readyState}`);
 
@@ -167,9 +170,10 @@ function tryReconnect({ connector, endpoint }, { WebSocket, reconnect, log, verb
     }
 
     conn.currentlyTryingWS._removeAllCallbacks();
+    conn.currentlyTryingWS.__closed = true;
     conn.currentlyTryingWS.close();
   } else if (verbose || browser) {
-    logger.write(log, `${endpoint} Created new websocket`);
+    logger.write(log, `${endpoint} Created new websocket #${wsId}`);
   }
 
   // so in case when device is online but websocket server is not running we usually
@@ -180,7 +184,7 @@ function tryReconnect({ connector, endpoint }, { WebSocket, reconnect, log, verb
   // (see above)... and we try with a new websocket every 4800ms again instead on every tick (800ms)
 
   const ws = new WebSocket(endpoint);
-  ws.__id = Math.random();
+  ws.__id = wsId;
 
   conn.currentlyTryingWS = ws;
   conn.currentlyTryingWS._waitForConnectCounter = 0;
@@ -200,7 +204,7 @@ function tryReconnect({ connector, endpoint }, { WebSocket, reconnect, log, verb
     }
 
     if (verbose || browser) {
-      logger.write(log, `${endpoint} Websocket open`);
+      logger.write(log, `${endpoint} Websocket #${wsId} open`);
     }
 
     conn.currentlyTryingWS = null;
@@ -237,7 +241,10 @@ function addSocketListeners({ ws, connector, openCallback, reconnect }, { log, v
   };
 
   const closeCallback = () => {
-    logger.write(log, `${connector.endpoint} ✖ Connection [ ${connector.protocol} ] closed`);
+    logger.write(
+      log,
+      `${connector.endpoint} ✖ Connection #${conn.websocket.__id} [ ${connector.protocol} ] closed`
+    );
 
     if (connector.decommissioned) {
       connector.connectStatus(false);
@@ -262,6 +269,16 @@ function addSocketListeners({ ws, connector, openCallback, reconnect }, { log, v
     conn.checkTicker = 0;
 
     const msg = browser ? _msg.data : _msg;
+
+    if (conn.websocket.__closed) {
+      // if (msg != 'pong') {
+      //   logger.red(
+      //     log,
+      //     `${connector.endpoint} Already closed connection #${conn.websocket.__id} [ ${connector.protocol} ] received msg '${msg}'`
+      //   );
+      // }
+      return;
+    }
 
     if (msg == 'pong') {
       connector.emit('pong');
@@ -306,12 +323,14 @@ function decommission(connector) {
 
   if (conn.currentlyTryingWS) {
     conn.currentlyTryingWS._removeAllCallbacks();
+    conn.currentlyTryingWS.__closed = true;
     conn.currentlyTryingWS.close();
     conn.currentlyTryingWS = null;
   }
 
   if (conn.ws) {
     conn.ws._removeAllCallbacks();
+    conn.ws.__closed = true;
     conn.ws.close();
     conn.ws = null;
   }
