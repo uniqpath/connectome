@@ -2,6 +2,10 @@ import { EventEmitter } from '../../utils/index.js';
 
 //import ProtocolStore from '../../stores/back/protocolStore.js';
 
+//⚠️ when not going directly to ws port but instead for example through ligthttpd websocket-upgrade
+// this channelList will behave strangely... probably just a lag between connections actually disappearing
+// so to count active connections through proxy it is not accurate, hopefully just a time lag but test...
+
 class ChannelList extends EventEmitter {
   constructor({ protocol }) {
     super();
@@ -65,13 +69,11 @@ class ChannelList extends EventEmitter {
 
   reportStatus() {
     const connList = this.channels.map(channel => {
-      const result = {
+      return {
         ip: channel.remoteIp(),
         address: channel.remoteAddress(),
         remotePubkeyHex: channel.remotePubkeyHex()
       };
-
-      return result;
     });
 
     this.emit('status', { connList });

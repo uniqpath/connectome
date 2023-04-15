@@ -1,4 +1,4 @@
-import WebSocket from 'ws';
+import { WebSocketServer } from 'ws';
 
 import { EventEmitter } from '../../utils/index.js';
 
@@ -30,11 +30,11 @@ class WsServer extends EventEmitter {
       // };
 
       if (server) {
-        this.webSocketServer = new WebSocket.Server({ server });
-        //this.webSocketServer = new WebSocket.Server({ server, handleProtocols });
+        this.webSocketServer = new WebSocketServer({ server });
+        //this.webSocketServer = new WebSocketServer({ server, handleProtocols });
       } else {
-        this.webSocketServer = new WebSocket.Server({ port });
-        //this.webSocketServer = new WebSocket.Server({ port, handleProtocols });
+        this.webSocketServer = new WebSocketServer({ port });
+        //this.webSocketServer = new WebSocketServer({ port, handleProtocols });
       }
 
       this.continueSetup({ log, verbose });
@@ -43,6 +43,18 @@ class WsServer extends EventEmitter {
 
   continueSetup({ log, verbose }) {
     this.webSocketServer.on('connection', (ws, req) => {
+      // https://github.com/websockets/ws/issues/1354
+      // Websocket RangeError: Invalid WebSocket frame: RSV2 and RSV3 must be clear
+      // https://stackoverflow.com/questions/45303733/error-rsv2-and-rsv3-must-be-clear-in-ws
+      // this should possibly help, not yet confirmed!
+      ws.on('error', e => {
+        const log2 = log.yellow || log;
+        log2('Handled Websocket issue (probably a malformed websocket connection):');
+        log2(e);
+        // log.red => assume dmt logger
+        // log => assume coxnsole.log
+      });
+
       const channel = new Channel(ws, { log, verbose });
 
       channel._remoteIp = getRemoteIp(req);
