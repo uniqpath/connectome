@@ -1,4 +1,5 @@
-import { WebSocketServer } from 'ws';
+//import { WebSocketServer } from 'ws';
+import WebSocket from 'ws';
 
 import { EventEmitter } from '../../utils/index.js';
 
@@ -30,10 +31,10 @@ class WsServer extends EventEmitter {
       // };
 
       if (server) {
-        this.webSocketServer = new WebSocketServer({ server });
+        this.webSocketServer = new WebSocket.Server({ server });
         //this.webSocketServer = new WebSocketServer({ server, handleProtocols });
       } else {
-        this.webSocketServer = new WebSocketServer({ port });
+        this.webSocketServer = new WebSocket.Server({ port });
         //this.webSocketServer = new WebSocketServer({ port, handleProtocols });
       }
 

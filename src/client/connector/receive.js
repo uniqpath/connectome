@@ -67,7 +67,7 @@ function wireReceive({ jsonData, encryptedData, rawMessage, wasEncrypted, connec
         log,
         `Connector ${connector.endpoint} decrypting with shared secret ${connector.sharedSecret}...`
       );
-      logger.cyan(log, JSON.stringify(connector.sharedSecret));
+      //logger.cyan(log, JSON.stringify(connector.sharedSecret));
     }
 
     if (!connector.sharedSecret) {

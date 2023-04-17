@@ -241,6 +241,14 @@ function addSocketListeners({ ws, connector, openCallback, reconnect }, { log, v
   };
 
   const closeCallback = () => {
+    //❗❗❗❗ -- can get stray messages even here!! after close callback ws implementation lets a few (one) messages through!!
+    // this only happened on LAN ...
+    // [run] turbine 82106 4/17/2023, 11:27:25 AM (+167ms) ∞ lanServerConn — 'ws://192.168.0.10:7780 ✖ Connection #28485 [ dmt ] closed'
+    // [run] turbine 82106 4/17/2023, 11:27:25 AM (+01ms) ∞ lanServerConn — 'ws://192.168.0.10:7780 Created new websocket #17068'
+    // [run] turbine 82106 4/17/2023, 11:27:26 AM (+338ms) ∞ 1.0.0.1 consecutiveUnresolvedTimeout after 2x unresolved promise
+    // [run] turbine 82106 4/17/2023, 11:27:26 AM (+43ms) ∞ lanServerConn — "ws://192.168.0.10:7780 connection #28485 [ dmt ] received msg '��\x19X���9�߈�V^L�#�b��)\x02�\r��n\x06^?U�v�\x00�ͻ>����k~�A(^�\t�İP�=���X*���'"
+    conn.websocket.__closed = true;
+
     logger.write(
       log,
       `${connector.endpoint} ✖ Connection #${conn.websocket.__id} [ ${connector.protocol} ] closed`

@@ -10,27 +10,24 @@ import logger from '../../utils/logger/logger.js';
 function send({ message, channel }) {
   const { log } = channel;
 
+  // logger.red(log, `Sending over channel ${channel.ident} ws id ${channel.ws.__id}`);
+  // logger.red(log, message);
+
   if (isObject(message)) {
     message = JSON.stringify(message);
   }
+
+  const prefix = `Channel #${channel.ident} ${channel.remoteAddress() || ''} ${
+    channel.remotePubkeyHex() ? `to ${channel.remotePubkeyHex()}` : ''
+  }`;
 
   const nonce = new Uint8Array(integerToByteArray(2 * channel.sentCount + 1, 24));
 
   if (channel.verbose) {
     if (channel.sharedSecret) {
-      logger.write(
-        log,
-        `Channel #${channel.ident} ${
-          channel.remoteAddress() || ''
-        } // to ${channel.remotePubkeyHex()} → Sending encrypted message #${channel.sentCount}:`
-      );
+      logger.cyan(log, `${prefix} → Sending encrypted message #${channel.sentCount}:`);
     } else {
-      logger.write(
-        log,
-        `Channel #${channel.ident} ${channel.remoteAddress() || ''} // to ${channel.remotePubkeyHex()} → Sending message #${
-          channel.sentCount
-        }:`
-      );
+      logger.green(log, `${prefix} → Sending message #${channel.sentCount}:`);
     }
 
     logger.write(log, message);

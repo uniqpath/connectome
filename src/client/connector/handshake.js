@@ -54,7 +54,9 @@ export default function diffieHellman({ connector, afterFirstStep = () => {} }) 
                 const _tag = tag ? ` (${tag})` : '';
                 logger.cyan(
                   connector.log,
-                  `✓✓✓ ${endpoint}${_tag} ✓ Connection [ ${protocol || '"no-name"'} ] ready`
+                  `✓✓✓ ${endpoint}${_tag} ✓ Connection #${connector.connection.websocket.__id} [ ${
+                    protocol || '"no-name"'
+                  } ] ready`
                 );
               }
             })
