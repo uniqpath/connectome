@@ -53,10 +53,15 @@ class WsServer extends EventEmitter {
         log2('Handled Websocket issue (probably a malformed websocket connection):');
         log2(e);
         // log.red => assume dmt logger
-        // log => assume coxnsole.log
+        // log => assume console.log
       });
 
       const channel = new Channel(ws, { log, verbose });
+
+      const wsId = Math.round(10 ** 5 * Math.random()).toString();
+      ws.__id = wsId;
+      const log3 = log.red || log;
+      log3(`Created new channel ${channel.ident}, ws id: ${wsId}`);
 
       channel._remoteIp = getRemoteIp(req);
       channel._remoteAddress = getRemoteHost(req);

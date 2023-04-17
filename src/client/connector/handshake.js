@@ -15,7 +15,7 @@ export default function diffieHellman({ connector, afterFirstStep = () => {} }) 
   return new Promise((success, reject) => {
     connector
       .remoteObject('Auth')
-      .call('exchangePubkeys', { pubkey: clientPublicKeyHex })
+      .call('exchangePubkeys', { pubkey: clientPublicKeyHex, clientWsId: connector.connection.websocket.__id })
       .then(remotePubkeyHex => {
         const sharedSecret = nacl.box.before(hexToBuffer(remotePubkeyHex), clientPrivateKey);
 
